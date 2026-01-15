@@ -1,3 +1,14 @@
+clicky (1.1.0) una; urgency=low
+
+  * Wave 1-9: Complete Windows 11 Experience.
+  * Added Canvas Editor with Pen, Highlighter, Shapes, Arrows, and Crop.
+  * Added configurable properties (Color, Width, Fill, Opacity).
+  * Added Global Shortcuts and Clipboard/Notification integration.
+  * Modernized capture using XDG Portals (Wayland support).
+  * Added CI pipeline with Flake8 and Unit Tests.
+
+ -- Antigravity AI <antigravity@google.com>  Thu, 15 Jan 2026 00:00:00 +0000
+
 clicky (1.0.0) una; urgency=low
 
   * Initial release

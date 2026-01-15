@@ -42,4 +42,27 @@ jobs:
       run: |
         # Set PYTHONPATH to include the app source
         export PYTHONPATH=$PYTHONPATH:$(pwd)/usr/lib/clicky
-        python3 tests/test_basic.py
+        python3 tests/test_logic.py
+
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Build Packages
+        run: |
+          chmod +x scripts/package.sh
+          ./scripts/package.sh
+          
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            releases/*.deb
+            releases/*.rpm
+          body_path: debian/changelog
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
