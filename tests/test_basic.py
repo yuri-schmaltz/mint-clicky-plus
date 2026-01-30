@@ -1,22 +1,29 @@
 import unittest
 import sys
 import os
-import gi
 
-# Require GTK 3.0 BEFORE importing utils that uses it
+GI_AVAILABLE = False
+DEPS_AVAILABLE = False
+
 try:
+    import gi
     gi.require_version('Gtk', '3.0')
     gi.require_version('Gdk', '3.0')
     gi.require_version('GdkX11', '3.0')
-except ValueError as e:
-    print(f"Error setting GTK version: {e}")
-except ImportError:
-    print("GTK not available")
+    from gi.repository import Gdk
+    GI_AVAILABLE = True
+except Exception:
+    GI_AVAILABLE = False
 
-# Add the library directory to sys.path to import modules
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../usr/lib/clicky')))
-
-from utils import cairo_rect_to_gdk_rect, gdk_rect_to_cairo_rect
+try:
+    import cairo
+    if GI_AVAILABLE:
+        # Add the library directory to sys.path to import modules
+        sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../usr/lib/clicky')))
+        from utils import cairo_rect_to_gdk_rect, gdk_rect_to_cairo_rect
+        DEPS_AVAILABLE = True
+except Exception:
+    DEPS_AVAILABLE = False
 
 class MockGdkRectangle:
     def __init__(self, x, y, width, height):
@@ -38,20 +45,18 @@ class MockCairoRectangle:
         self.width = width
         self.height = height
 
-# Mocking cairo.RectangleInt since we might not have cairo installed in the test env perfectly, 
-# but let's try to assume the utils imports work or mock them if they fail.
-# Actually, utils.py imports cairo. If this fails, we catch it.
-
-try:
-    import cairo
-    from gi.repository import Gdk
-except ImportError:
-    print("GTK/Cairo dependencies missing, skipping full integration tests.")
-
 class TestUtils(unittest.TestCase):
     
     def test_basic_math(self):
         self.assertEqual(1 + 1, 2)
+
+    @unittest.skipUnless(DEPS_AVAILABLE, "GTK/Cairo indisponível para testes de conversão")
+    def test_rect_conversion(self):
+        cairo_rect = cairo.RectangleInt(1, 2, 3, 4)
+        gdk_rect = cairo_rect_to_gdk_rect(cairo_rect)
+        self.assertEqual((gdk_rect.x, gdk_rect.y, gdk_rect.width, gdk_rect.height), (1, 2, 3, 4))
+        round_trip = gdk_rect_to_cairo_rect(gdk_rect)
+        self.assertEqual((round_trip.x, round_trip.y, round_trip.width, round_trip.height), (1, 2, 3, 4))
 
     # We would test crop_geometry and conversions here.
     # Since utils.py relies heavily on X11/Gdk imports which might be hard to mock perfectly without a display,

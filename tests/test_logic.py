@@ -46,7 +46,7 @@ mock_gi.Gdk.EventMask.POINTER_MOTION_MASK = 0
 # Patch dbus as well
 mock_dbus = MagicMock()
 mock_gi.GLib.MainLoop = MagicMock
-with patch.dict('sys.modules', {'gi.repository': mock_gi, 'gi': MagicMock(), 'dbus': mock_dbus}):
+with patch.dict('sys.modules', {'gi.repository': mock_gi, 'gi': MagicMock(), 'dbus': mock_dbus, 'cairo': MagicMock(), 'setproctitle': MagicMock()}):
     import utils
     import canvas
     import clicky

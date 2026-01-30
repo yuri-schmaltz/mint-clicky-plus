@@ -159,7 +159,9 @@ class MainWindow():
     def start_screenshot(self, widget):
         self.hide_window()
         # Increased to 500ms to ensure compositor animations (fade-out) are complete
-        GObject.timeout_add(500, self.take_screenshot)
+        delay_seconds = self.settings.get_int("delay")
+        delay_ms = max(0, int(delay_seconds)) * 1000
+        GLib.timeout_add(500 + delay_ms, self.take_screenshot)
 
     def hide_window(self):
         self.window.hide()
@@ -173,19 +175,6 @@ class MainWindow():
         self.window.set_skip_pager_hint(False)
         self.window.set_skip_taskbar_hint(False)
 
-    def take_screenshot(self):
-        try:
-            options = Options(self.settings)
-            pixbuf = utils.capture_pixbuf(options)
-            self.builder.get_object("screenshot_image").set_from_pixbuf(pixbuf)
-            self.builder.get_object("screenshot_image").show()
-            self.navigate_to("screenshot_page")
-            self.show_window()
-        except Exception as e:
-            print(traceback.format_exc())
-            self.show_error_dialog(_("An error occurred during the screenshot:\n\n") + str(e))
-            self.show_window()
-
     def show_error_dialog(self, message):
         dialog = Gtk.MessageDialog(
             transient_for=self.window,
@@ -197,14 +186,6 @@ class MainWindow():
         dialog.format_secondary_text(message)
         dialog.run()
         dialog.destroy()
-
-    @idle_function
-    def navigate_to(self, page, name=""):
-        if page == "main_page":
-            self.builder.get_object("go_back_button").hide()
-        else:
-            self.builder.get_object("go_back_button").show()
-        self.stack.set_visible_child_name(page)
 
     def set_mode_and_capture(self, mode):
         # Map string mode to radio button or constant

@@ -74,7 +74,8 @@ def capture_via_xdg_portal(options):
         # Prepare options
         portal_opts = {
             'handle_token': f'clicky_{GLib.random_int()}',
-            'interactive': False # Request immediate capture if possible
+            # Allow interactive selection for area mode
+            'interactive': options.mode == CAPTURE_MODE_AREA
         }
         
         # Call Screenshot method
@@ -163,17 +164,19 @@ def blank_rectangle_in_pixbuf(pixbuf, rect):
     rowstride = pixbuf.get_rowstride()
     has_alpha = pixbuf.get_has_alpha()
     n_channels = pixbuf.get_n_channels()
-    pixels = bytearray(pixbuf.get_pixels())
+    pixels = pixbuf.get_pixels()
+    if not hasattr(pixels, "__setitem__"):
+        return
 
     for y in range(rect.y, y2):
         for x in range(rect.x, x2):
             # insert pixel data at right location in bytes array
             i = y * rowstride + x * n_channels
-            pixels[i*3 + 0] = 0 # red
-            pixels[i*3 + 1] = 0 # green
-            pixels[i*3 + 2] = 0 # blue
+            pixels[i + 0] = 0 # red
+            pixels[i + 1] = 0 # green
+            pixels[i + 2] = 0 # blue
             if has_alpha:
-                pixels[i*3 + 4] = 255 # opaque black
+                pixels[i + 3] = 255 # opaque black
 
 def cairo_rect_to_gdk_rect(cairo_rect):
     rect = Gdk.Rectangle()
@@ -181,6 +184,7 @@ def cairo_rect_to_gdk_rect(cairo_rect):
     rect.y = cairo_rect.y
     rect.width = cairo_rect.width
     rect.height = cairo_rect.height
+    return rect
 
 def gdk_rect_to_cairo_rect(gdk_rect):
     return cairo.RectangleInt(gdk_rect.x, gdk_rect.y, gdk_rect.width, gdk_rect.height)
@@ -241,8 +245,9 @@ def crop_geometry(window_geometry):
 def screenshot_fallback_fire_flash(window, rectangle):
     if rectangle == None:
         rectangle = crop_geometry(window.get_frame_extents())
-    flash = cheese_flash_new()
-    flash.fire(rect)
+    from flash import CheeseFlash
+    flash = CheeseFlash()
+    flash.fire(rectangle)
 
 def find_current_window():
     current_window = Gdk.Screen.get_default().get_active_window()
@@ -444,7 +449,7 @@ def capture_pixbuf(options):
     return screenshot
 
 def screenshot_show_dialog(parent, message_type, buttons_type, message, detail):
-    dialog = Gtk.MessageDialog(parent, GTK_DIALOG_DESTROY_WITH_PARENT, message_type, buttons_type, message)
+    dialog = Gtk.MessageDialog(parent, Gtk.DialogFlags.DESTROY_WITH_PARENT, message_type, buttons_type, message)
     dialog.set_title("")
     if detail != None:
         dialog.format_secondary_text(detail)

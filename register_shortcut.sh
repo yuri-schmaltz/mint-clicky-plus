@@ -1,8 +1,9 @@
 #!/bin/bash
 
 # Configuration
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 KEY_Name="Clicky Area Screenshot"
-KEY_Command="/home/yurix/Documentos/my-clicky/clicky_cli.sh --area"
+KEY_Command="$REPO_ROOT/clicky_cli.sh --area"
 KEY_Binding="<Shift><Super>s"
 SCHEMA="org.gnome.settings-daemon.plugins.media-keys.custom-keybinding"
 PATH_PREFIX="/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/clicky-area/"
