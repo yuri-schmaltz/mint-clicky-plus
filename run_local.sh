@@ -13,6 +13,11 @@ if [ -f "$SCHEMA_DIR/org.x.clicky.gschema.xml" ]; then
     glib-compile-schemas "$SCHEMA_DIR"
 fi
 
+# Build translations locally (mo files)
+if command -v make >/dev/null 2>&1; then
+    make -s buildmo
+fi
+
 # Set Environment Variables
 export PYTHONPATH="$LIB_DIR:$PYTHONPATH"
 export GSETTINGS_SCHEMA_DIR="$SCHEMA_DIR"
@@ -21,4 +26,4 @@ echo "Starting Clicky from local source..."
 echo "PYTHONPATH: $PYTHONPATH"
 echo "GSETTINGS_SCHEMA_DIR: $GSETTINGS_SCHEMA_DIR"
 
-python3 "$LIB_DIR/clicky.py"
+/usr/bin/python3 "$LIB_DIR/clicky.py"

@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 import cairo
 import dbus
+from dbus.mainloop.glib import DBusGMainLoop
 import os
 import sys
 import gi
@@ -14,6 +15,9 @@ except ValueError:
 
 from gi.repository import Gtk, Gio, Gdk, GdkPixbuf, GLib, GSound
 from common import *
+
+# Ensure DBus uses GLib main loop for async calls/signals
+DBusGMainLoop(set_as_default=True)
 
 IS_X11_AVAILABLE = False
 try:
@@ -130,8 +134,27 @@ def select_area_interactive():
     window.show_all()
     window.present()
 
+    # Ensure we receive pointer/keyboard events during selection
+    Gdk.flush()
+    while Gtk.events_pending():
+        Gtk.main_iteration()
+
+    seat = display.get_default_seat()
+    grab_status = seat.grab(
+        window.get_window(),
+        Gdk.SeatCapabilities.POINTER | Gdk.SeatCapabilities.KEYBOARD,
+        True,
+        None,
+        None,
+        None,
+        None,
+    )
+
     loop = GLib.MainLoop()
     loop.run()
+
+    if grab_status == Gdk.GrabStatus.SUCCESS:
+        seat.ungrab()
 
     window.destroy()
 
@@ -163,7 +186,7 @@ def capture_via_gnome_dbus(options):
         tmpname = "scr-%d.png" % GLib.random_int()
         filename = os.path.join(path, tmpname)
 
-        bus = dbus.SessionBus()
+        bus = dbus.SessionBus(mainloop=DBusGMainLoop())
         interface = bus.get_object('org.gnome.Shell.Screenshot', '/org/gnome/Shell/Screenshot')
         manager = dbus.Interface(interface, 'org.gnome.Shell.Screenshot')
 
@@ -192,7 +215,7 @@ def capture_via_xdg_portal(options):
     print("Attempting XDG Portal capture...")
     pixbuf = None
     try:
-        bus = dbus.SessionBus()
+        bus = dbus.SessionBus(mainloop=DBusGMainLoop())
         portal = bus.get_object('org.freedesktop.portal.Desktop', '/org/freedesktop/portal/desktop')
         interface = dbus.Interface(portal, 'org.freedesktop.portal.Screenshot')
         
@@ -559,17 +582,33 @@ def play_sound_effect():
 
 def capture_pixbuf(options):
     screenshot = None
-    
-    # 1. Try XDG Portal (Standard for Wayland/Sandboxed)
-    if options.enable_dbus_method:
-         screenshot = capture_via_xdg_portal(options)
 
-    # 2. Try GNOME Shell DBus (Legacy GNOME)
-    if screenshot == None and options.enable_dbus_method:
+    if options.mode == CAPTURE_MODE_WINDOW:
+        if options.enable_dbus_method:
+            print("Capturing window via GNOME Dbus...")
+            screenshot = capture_via_gnome_dbus(options)
+        if screenshot == None:
+            print("Capturing window via X11...")
+            screenshot = capture_via_x11(options)
+        return screenshot
+
+    if options.mode == CAPTURE_MODE_AREA:
+        if options.enable_dbus_method:
+            print("Capturing area via GNOME Dbus...")
+            screenshot = capture_via_gnome_dbus(options)
+        if screenshot == None and options.enable_dbus_method and not IS_X11_AVAILABLE:
+            screenshot = capture_via_xdg_portal(options)
+        if screenshot == None:
+            print("Capturing area via X11...")
+            screenshot = capture_via_x11(options)
+        return screenshot
+
+    # CAPTURE_MODE_SCREEN
+    if options.enable_dbus_method:
         print("Capturing screenshot via GNOME Dbus...")
         screenshot = capture_via_gnome_dbus(options)
-
-    # 3. Try X11 (Legacy/Fallback)
+    if screenshot == None and options.enable_dbus_method and not IS_X11_AVAILABLE:
+        screenshot = capture_via_xdg_portal(options)
     if screenshot == None:
         print("Capturing screenshot via X11...")
         screenshot = capture_via_x11(options)

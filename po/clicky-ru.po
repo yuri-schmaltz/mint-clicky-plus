@@ -1,0 +1,119 @@
+# Russian translations for clicky
+msgid ""
+msgstr ""
+"Project-Id-Version: clicky\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-01-31 00:00+0000\n"
+"PO-Revision-Date: 2026-01-31 00:00+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: ru\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<12 || n%100>14) ? 1 : 2);\n"
+
+msgid "Screenshot"
+msgstr "Снимок экрана"
+
+msgid "Entire screen"
+msgstr "Весь экран"
+
+msgid "Active window"
+msgstr "Активное окно"
+
+msgid "Select a region"
+msgstr "Выбрать область"
+
+msgid "Capture area"
+msgstr "Область захвата"
+
+msgid "Delay (in seconds): "
+msgstr "Задержка (в секундах): "
+
+msgid "Include mouse pointer"
+msgstr "Включить указатель мыши"
+
+msgid "Add shadow"
+msgstr "Добавить тень"
+
+msgid "Options"
+msgstr "Параметры"
+
+msgid "Take Screenshot"
+msgstr "Сделать снимок экрана"
+
+msgid "Main shortcuts"
+msgstr "Основные сочетания"
+
+msgid "About"
+msgstr "О программе"
+
+msgid "Keyboard Shortcuts"
+msgstr "Сочетания клавиш"
+
+msgid "Quit"
+msgstr "Выход"
+
+msgid "Screenshot Failed"
+msgstr "Сбой снимка экрана"
+
+msgid "Red Pen"
+msgstr "Красная ручка"
+
+msgid "Yellow Highlighter"
+msgstr "Жёлтый маркер"
+
+msgid "Rectangle"
+msgstr "Прямоугольник"
+
+msgid "Circle"
+msgstr "Круг"
+
+msgid "Crop Image"
+msgstr "Обрезать изображение"
+
+msgid "Line"
+msgstr "Линия"
+
+msgid "Arrow"
+msgstr "Стрелка"
+
+msgid "Stroke Color"
+msgstr "Цвет обводки"
+
+msgid "Line Width"
+msgstr "Толщина линии"
+
+msgid "Fill"
+msgstr "Заливка"
+
+msgid "Opacity:"
+msgstr "Непрозрачность:"
+
+msgid "Blue Pen"
+msgstr "Синяя ручка"
+
+msgid "Save"
+msgstr "Сохранить"
+
+msgid "Save Screenshot"
+msgstr "Сохранить снимок экрана"
+
+msgid "Screenshot.png"
+msgstr "Снимок экрана.png"
+
+msgid "Screenshot Saved"
+msgstr "Снимок экрана сохранён"
+
+msgid "Image copied to clipboard. Click to edit."
+msgstr "Изображение скопировано в буфер обмена. Нажмите, чтобы редактировать."
+
+msgid "Screenshot canceled or failed."
+msgstr "Снимок экрана отменён или не удался."
+
+msgid "An error occurred during the screenshot:\n\n"
+msgstr "Произошла ошибка при создании снимка экрана:\n\n"
+
+msgid "Save images of your screen or individual windows"
+msgstr "Сохраняйте изображения экрана или отдельных окон"

@@ -68,7 +68,7 @@ class MyApplication(Gtk.Application):
         self.activate()
         return 0
 
-    def activate(self, application):
+    def activate(self, application=None):
         windows = self.get_windows()
         if (len(windows) > 0):
             window = windows[0]
@@ -299,8 +299,10 @@ class MainWindow():
         prop_box.pack_start(opacity_scale, False, False, 0)
 
         prop_box.show_all()
-        box.pack_start(prop_box, False, False, 0)
-        box.reorder_child(prop_box, 1)
+        prop_item = Gtk.ToolItem()
+        prop_item.set_expand(True)
+        prop_item.add(prop_box)
+        toolbar.insert(prop_item, -1)
 
         # Blue/Eraser (Placeholder for now)
         btn_blue = Gtk.ToolButton()
@@ -405,6 +407,10 @@ class MainWindow():
                 self.canvas.set_size_request(w, h)
                 
                 self.navigate_to("screenshot_page")
+                self.show_window()
+            else:
+                self.show_error_dialog(_("Screenshot canceled or failed."))
+                self.navigate_to("main_page")
                 self.show_window()
         except Exception as e:
             print(traceback.format_exc())

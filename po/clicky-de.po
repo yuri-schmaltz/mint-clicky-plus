@@ -1,0 +1,119 @@
+# German translations for clicky
+msgid ""
+msgstr ""
+"Project-Id-Version: clicky\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-01-31 00:00+0000\n"
+"PO-Revision-Date: 2026-01-31 00:00+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: de\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Screenshot"
+msgstr "Bildschirmfoto"
+
+msgid "Entire screen"
+msgstr "Gesamter Bildschirm"
+
+msgid "Active window"
+msgstr "Aktives Fenster"
+
+msgid "Select a region"
+msgstr "Bereich auswählen"
+
+msgid "Capture area"
+msgstr "Aufnahmebereich"
+
+msgid "Delay (in seconds): "
+msgstr "Verzögerung (in Sekunden): "
+
+msgid "Include mouse pointer"
+msgstr "Mauszeiger einbeziehen"
+
+msgid "Add shadow"
+msgstr "Schatten hinzufügen"
+
+msgid "Options"
+msgstr "Optionen"
+
+msgid "Take Screenshot"
+msgstr "Bildschirmfoto aufnehmen"
+
+msgid "Main shortcuts"
+msgstr "Wichtige Tastenkürzel"
+
+msgid "About"
+msgstr "Über"
+
+msgid "Keyboard Shortcuts"
+msgstr "Tastenkürzel"
+
+msgid "Quit"
+msgstr "Beenden"
+
+msgid "Screenshot Failed"
+msgstr "Bildschirmfoto fehlgeschlagen"
+
+msgid "Red Pen"
+msgstr "Roter Stift"
+
+msgid "Yellow Highlighter"
+msgstr "Gelber Textmarker"
+
+msgid "Rectangle"
+msgstr "Rechteck"
+
+msgid "Circle"
+msgstr "Kreis"
+
+msgid "Crop Image"
+msgstr "Bild zuschneiden"
+
+msgid "Line"
+msgstr "Linie"
+
+msgid "Arrow"
+msgstr "Pfeil"
+
+msgid "Stroke Color"
+msgstr "Strichfarbe"
+
+msgid "Line Width"
+msgstr "Linienstärke"
+
+msgid "Fill"
+msgstr "Füllen"
+
+msgid "Opacity:"
+msgstr "Deckkraft:"
+
+msgid "Blue Pen"
+msgstr "Blauer Stift"
+
+msgid "Save"
+msgstr "Speichern"
+
+msgid "Save Screenshot"
+msgstr "Bildschirmfoto speichern"
+
+msgid "Screenshot.png"
+msgstr "Bildschirmfoto.png"
+
+msgid "Screenshot Saved"
+msgstr "Bildschirmfoto gespeichert"
+
+msgid "Image copied to clipboard. Click to edit."
+msgstr "Bild in die Zwischenablage kopiert. Zum Bearbeiten klicken."
+
+msgid "Screenshot canceled or failed."
+msgstr "Bildschirmfoto abgebrochen oder fehlgeschlagen."
+
+msgid "An error occurred during the screenshot:\n\n"
+msgstr "Beim Erstellen des Bildschirmfotos ist ein Fehler aufgetreten:\n\n"
+
+msgid "Save images of your screen or individual windows"
+msgstr "Speichern Sie Bilder Ihres Bildschirms oder einzelner Fenster"

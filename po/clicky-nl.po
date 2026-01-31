@@ -1,0 +1,119 @@
+# Dutch translations for clicky
+msgid ""
+msgstr ""
+"Project-Id-Version: clicky\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-01-31 00:00+0000\n"
+"PO-Revision-Date: 2026-01-31 00:00+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: nl\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Screenshot"
+msgstr "Schermafbeelding"
+
+msgid "Entire screen"
+msgstr "Volledig scherm"
+
+msgid "Active window"
+msgstr "Actief venster"
+
+msgid "Select a region"
+msgstr "Selecteer een gebied"
+
+msgid "Capture area"
+msgstr "Opnamegebied"
+
+msgid "Delay (in seconds): "
+msgstr "Vertraging (in seconden): "
+
+msgid "Include mouse pointer"
+msgstr "Muisaanwijzer opnemen"
+
+msgid "Add shadow"
+msgstr "Schaduw toevoegen"
+
+msgid "Options"
+msgstr "Opties"
+
+msgid "Take Screenshot"
+msgstr "Schermafbeelding maken"
+
+msgid "Main shortcuts"
+msgstr "Belangrijkste sneltoetsen"
+
+msgid "About"
+msgstr "Over"
+
+msgid "Keyboard Shortcuts"
+msgstr "Sneltoetsen"
+
+msgid "Quit"
+msgstr "Afsluiten"
+
+msgid "Screenshot Failed"
+msgstr "Schermafbeelding mislukt"
+
+msgid "Red Pen"
+msgstr "Rode pen"
+
+msgid "Yellow Highlighter"
+msgstr "Gele markeerstift"
+
+msgid "Rectangle"
+msgstr "Rechthoek"
+
+msgid "Circle"
+msgstr "Cirkel"
+
+msgid "Crop Image"
+msgstr "Afbeelding bijsnijden"
+
+msgid "Line"
+msgstr "Lijn"
+
+msgid "Arrow"
+msgstr "Pijl"
+
+msgid "Stroke Color"
+msgstr "Lijnkleur"
+
+msgid "Line Width"
+msgstr "Lijndikte"
+
+msgid "Fill"
+msgstr "Vullen"
+
+msgid "Opacity:"
+msgstr "Dekking:"
+
+msgid "Blue Pen"
+msgstr "Blauwe pen"
+
+msgid "Save"
+msgstr "Opslaan"
+
+msgid "Save Screenshot"
+msgstr "Schermafbeelding opslaan"
+
+msgid "Screenshot.png"
+msgstr "Schermafbeelding.png"
+
+msgid "Screenshot Saved"
+msgstr "Schermafbeelding opgeslagen"
+
+msgid "Image copied to clipboard. Click to edit."
+msgstr "Afbeelding gekopieerd naar het klembord. Klik om te bewerken."
+
+msgid "Screenshot canceled or failed."
+msgstr "Schermafbeelding geannuleerd of mislukt."
+
+msgid "An error occurred during the screenshot:\n\n"
+msgstr "Er is een fout opgetreden tijdens het maken van de schermafbeelding:\n\n"
+
+msgid "Save images of your screen or individual windows"
+msgstr "Sla afbeeldingen van uw scherm of afzonderlijke vensters op"

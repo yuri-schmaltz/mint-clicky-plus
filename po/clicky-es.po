@@ -1,0 +1,119 @@
+# Spanish translations for clicky
+msgid ""
+msgstr ""
+"Project-Id-Version: clicky\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-01-31 00:00+0000\n"
+"PO-Revision-Date: 2026-01-31 00:00+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Screenshot"
+msgstr "Captura de pantalla"
+
+msgid "Entire screen"
+msgstr "Pantalla completa"
+
+msgid "Active window"
+msgstr "Ventana activa"
+
+msgid "Select a region"
+msgstr "Seleccionar una región"
+
+msgid "Capture area"
+msgstr "Área de captura"
+
+msgid "Delay (in seconds): "
+msgstr "Retraso (en segundos): "
+
+msgid "Include mouse pointer"
+msgstr "Incluir puntero del ratón"
+
+msgid "Add shadow"
+msgstr "Añadir sombra"
+
+msgid "Options"
+msgstr "Opciones"
+
+msgid "Take Screenshot"
+msgstr "Tomar captura de pantalla"
+
+msgid "Main shortcuts"
+msgstr "Atajos principales"
+
+msgid "About"
+msgstr "Acerca de"
+
+msgid "Keyboard Shortcuts"
+msgstr "Atajos de teclado"
+
+msgid "Quit"
+msgstr "Salir"
+
+msgid "Screenshot Failed"
+msgstr "Error en la captura de pantalla"
+
+msgid "Red Pen"
+msgstr "Lápiz rojo"
+
+msgid "Yellow Highlighter"
+msgstr "Resaltador amarillo"
+
+msgid "Rectangle"
+msgstr "Rectángulo"
+
+msgid "Circle"
+msgstr "Círculo"
+
+msgid "Crop Image"
+msgstr "Recortar imagen"
+
+msgid "Line"
+msgstr "Línea"
+
+msgid "Arrow"
+msgstr "Flecha"
+
+msgid "Stroke Color"
+msgstr "Color del trazo"
+
+msgid "Line Width"
+msgstr "Grosor de línea"
+
+msgid "Fill"
+msgstr "Rellenar"
+
+msgid "Opacity:"
+msgstr "Opacidad:"
+
+msgid "Blue Pen"
+msgstr "Lápiz azul"
+
+msgid "Save"
+msgstr "Guardar"
+
+msgid "Save Screenshot"
+msgstr "Guardar captura de pantalla"
+
+msgid "Screenshot.png"
+msgstr "Captura de pantalla.png"
+
+msgid "Screenshot Saved"
+msgstr "Captura de pantalla guardada"
+
+msgid "Image copied to clipboard. Click to edit."
+msgstr "Imagen copiada al portapapeles. Haga clic para editar."
+
+msgid "Screenshot canceled or failed."
+msgstr "Captura de pantalla cancelada o fallida."
+
+msgid "An error occurred during the screenshot:\n\n"
+msgstr "Ocurrió un error durante la captura de pantalla:\n\n"
+
+msgid "Save images of your screen or individual windows"
+msgstr "Guarde imágenes de su pantalla o de ventanas individuales"
