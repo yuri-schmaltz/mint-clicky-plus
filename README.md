@@ -40,3 +40,11 @@ python3 -m unittest tests/test_logic.py
 ```
 
 > Observação: os testes dependem de GTK/Cairo. Em ambientes sem GUI, alguns testes são ignorados.
+
+### Teste manual (GUI) do modo área
+
+```bash
+CLICKY_RUN_GUI_TESTS=1 python3 -m unittest tests/test_area_integration.py
+```
+
+Esse teste abre um overlay para seleção de área e exige interação manual.

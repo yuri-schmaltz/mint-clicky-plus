@@ -27,6 +27,132 @@ except (ImportError, ValueError):
 SCREENSHOT_WIDTH = -1
 SCREENSHOT_HEIGHT = 250
 
+########### AREA SELECTION ###################
+
+def select_area_interactive():
+    display = Gdk.Display.get_default()
+    if display is None:
+        return None
+
+    screen = Gdk.Screen.get_default()
+    if screen is None:
+        return None
+
+    selection = {
+        "active": False,
+        "start_x": 0,
+        "start_y": 0,
+        "end_x": 0,
+        "end_y": 0,
+        "cancelled": False,
+    }
+
+    window = Gtk.Window(type=Gtk.WindowType.POPUP)
+    window.set_app_paintable(True)
+    window.set_decorated(False)
+    window.set_keep_above(True)
+    window.set_accept_focus(True)
+    window.set_focus_on_map(True)
+    window.fullscreen()
+    window.set_opacity(0.35)
+
+    window.add_events(
+        Gdk.EventMask.BUTTON_PRESS_MASK |
+        Gdk.EventMask.BUTTON_RELEASE_MASK |
+        Gdk.EventMask.POINTER_MOTION_MASK |
+        Gdk.EventMask.KEY_PRESS_MASK
+    )
+
+    def on_draw(widget, cr):
+        w = widget.get_allocated_width()
+        h = widget.get_allocated_height()
+        cr.set_source_rgba(0, 0, 0, 0.4)
+        cr.rectangle(0, 0, w, h)
+        cr.fill()
+
+        if selection["active"]:
+            x = min(selection["start_x"], selection["end_x"])
+            y = min(selection["start_y"], selection["end_y"])
+            width = abs(selection["end_x"] - selection["start_x"])
+            height = abs(selection["end_y"] - selection["start_y"])
+
+            # Transparent selection
+            cr.set_operator(cairo.OPERATOR_CLEAR)
+            cr.rectangle(x, y, width, height)
+            cr.fill()
+            cr.set_operator(cairo.OPERATOR_OVER)
+
+            # Border
+            cr.set_source_rgba(1, 1, 1, 1)
+            cr.set_line_width(1)
+            cr.set_dash([6.0, 4.0], 0)
+            cr.rectangle(x + 0.5, y + 0.5, width, height)
+            cr.stroke()
+        return False
+
+    def on_button_press(widget, event):
+        if event.button == 1:
+            selection["active"] = True
+            selection["start_x"] = event.x
+            selection["start_y"] = event.y
+            selection["end_x"] = event.x
+            selection["end_y"] = event.y
+            widget.queue_draw()
+        return True
+
+    def on_motion_notify(widget, event):
+        if selection["active"]:
+            selection["end_x"] = event.x
+            selection["end_y"] = event.y
+            widget.queue_draw()
+        return True
+
+    def on_button_release(widget, event):
+        if event.button == 1:
+            selection["end_x"] = event.x
+            selection["end_y"] = event.y
+            selection["active"] = False
+            loop.quit()
+        return True
+
+    def on_key_press(widget, event):
+        if event.keyval == Gdk.KEY_Escape:
+            selection["cancelled"] = True
+            loop.quit()
+        return True
+
+    window.connect("draw", on_draw)
+    window.connect("button-press-event", on_button_press)
+    window.connect("motion-notify-event", on_motion_notify)
+    window.connect("button-release-event", on_button_release)
+    window.connect("key-press-event", on_key_press)
+
+    window.show_all()
+    window.present()
+
+    loop = GLib.MainLoop()
+    loop.run()
+
+    window.destroy()
+
+    if selection["cancelled"]:
+        return None
+
+    x = int(min(selection["start_x"], selection["end_x"]))
+    y = int(min(selection["start_y"], selection["end_y"]))
+    width = int(abs(selection["end_x"] - selection["start_x"]))
+    height = int(abs(selection["end_y"] - selection["start_y"]))
+
+    if width < 5 or height < 5:
+        return None
+
+    rect = Gdk.Rectangle()
+    rect.x = x
+    rect.y = y
+    rect.width = width
+    rect.height = height
+    return rect
+
 ########### SHELL #########################
 
 def capture_via_gnome_dbus(options):
@@ -49,11 +175,10 @@ def capture_via_gnome_dbus(options):
         elif options.mode == CAPTURE_MODE_WINDOW:
             (success, filename_used) = manager.ScreenshotWindow(options.include_borders, options.include_pointer, options.enable_flash, filename)
         else:
-            x = 0
-            y = 0
-            height = 800
-            width = 600
-            (success, filename_used) = manager.ScreenshotArea(x, y, width, height, options.enable_flash, filename)
+            rect = select_area_interactive()
+            if rect is None:
+                return None
+            (success, filename_used) = manager.ScreenshotArea(rect.x, rect.y, rect.width, rect.height, options.enable_flash, filename)
 
         if success:
             pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_size(filename, SCREENSHOT_WIDTH, SCREENSHOT_HEIGHT)
@@ -303,12 +428,14 @@ def capture_via_x11(options):
         frame_offset_right = wm_real_coords.width - real_coords.width - frame_offset_left
         frame_offset_bottom = wm_real_coords.height - real_coords.height - frame_offset_top
 
-    # if options.mode == CAPTURE_MODE_AREA:
-    #     options.include_pointer = False
-    #     screenshot_coords.x = rectangle.x - screenshot_coords.x
-    #     screenshot_coords.y = rectangle.y - screenshot_coords.y
-    #     screenshot_coords.width  = rectangle.width
-    #     screenshot_coords.height = rectangle.height
+    if options.mode == CAPTURE_MODE_AREA:
+        rect = select_area_interactive()
+        if rect is None:
+            return None
+        screenshot_coords.x = rect.x
+        screenshot_coords.y = rect.y
+        screenshot_coords.width = rect.width
+        screenshot_coords.height = rect.height
 
     screenshot = Gdk.pixbuf_get_from_window(root_window,
                                            screenshot_coords.x, screenshot_coords.y,
