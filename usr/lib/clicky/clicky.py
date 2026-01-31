@@ -150,6 +150,7 @@ class MainWindow():
 
         # Widget signals
         self.window.connect("key-press-event",self.on_key_press_event)
+        self.window.connect("size-allocate", self.on_window_size_allocate)
         self.builder.get_object("go_back_button").connect("clicked", self.go_back)
         self.builder.get_object("button_take_screenshot").connect("clicked", self.start_screenshot)
         self.radio_mode_screen.connect("toggled", self.on_capture_mode_toggled)
@@ -430,6 +431,15 @@ class MainWindow():
         geometry.max_height = height
         self.window.set_geometry_hints(None, geometry, Gdk.WindowHints.MIN_SIZE | Gdk.WindowHints.MAX_SIZE)
 
+    def on_window_size_allocate(self, widget, allocation):
+        if self.fixed_size is None:
+            self.fixed_size = (allocation.width, allocation.height)
+            self.apply_fixed_layout()
+            return
+
+        fixed_width, fixed_height = self.fixed_size
+        if allocation.width != fixed_width or allocation.height != fixed_height:
+            self.window.resize(fixed_width, fixed_height)
     def take_screenshot(self):
         try:
             options = Options(self.settings)
