@@ -228,125 +228,89 @@ class MainWindow():
         # Get the container box
         box = self.builder.get_object("screenshot_box")
         
-        # Add Toolbar
-        toolbar = Gtk.Toolbar()
-        toolbar.set_style(Gtk.ToolbarStyle.ICONS)
+        # Main vertical container for toolbar rows
+        vbox_toolbar = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        vbox_toolbar.set_margin_start(4)
+        vbox_toolbar.set_margin_end(4)
         
-        # Pen Tool
-        btn_pen = Gtk.ToolButton()
-        btn_pen.set_icon_name("draw-freehand-symbolic")
-        btn_pen.set_tooltip_text(_("Pen"))
-        btn_pen.connect("clicked", self.set_canvas_mode, "pen")
-        toolbar.insert(btn_pen, -1)
+        # Row 1: Tools
+        toolbar1 = Gtk.Toolbar()
+        toolbar1.set_style(Gtk.ToolbarStyle.ICONS)
+        toolbar1.set_icon_size(Gtk.IconSize.LARGE_TOOLBAR)
         
-        # Highlighter Tool
-        btn_high = Gtk.ToolButton()
-        btn_high.set_icon_name("marker-symbolic")
-        btn_high.set_tooltip_text(_("Highlighter"))
-        btn_high.connect("clicked", self.set_canvas_mode, "highlighter")
-        toolbar.insert(btn_high, -1)
+        def add_tool(icon, tooltip, tool_mode):
+            btn = Gtk.ToolButton()
+            btn.set_icon_name(icon)
+            btn.set_tooltip_text(tooltip)
+            btn.connect("clicked", self.set_canvas_mode, tool_mode)
+            toolbar1.insert(btn, -1)
+            return btn
+
+        add_tool("draw-freehand-symbolic", _("Pen"), "pen")
+        add_tool("marker-symbolic", _("Highlighter"), "highlighter")
+        toolbar1.insert(Gtk.SeparatorToolItem(), -1)
+        add_tool("draw-rectangle-symbolic", _("Rectangle"), "rectangle")
+        add_tool("draw-ellipse-symbolic", _("Circle"), "circle")
+        add_tool("draw-line-symbolic", _("Line"), "line")
+        add_tool("go-next-symbolic", _("Arrow"), "arrow")
+        toolbar1.insert(Gtk.SeparatorToolItem(), -1)
+        add_tool("edit-cut-symbolic", _("Crop Image"), "crop")
+        add_tool("edit-clear-symbolic", _("Eraser"), "eraser")
         
-        # Shapes Separator
-        toolbar.insert(Gtk.SeparatorToolItem(), -1)
+        toolbar1.insert(Gtk.SeparatorToolItem(), -1)
+        btn_save = Gtk.ToolButton()
+        btn_save.set_icon_name("document-save-symbolic")
+        btn_save.set_tooltip_text(_("Save"))
+        btn_save.connect("clicked", self.save_canvas)
+        toolbar1.insert(btn_save, -1)
 
-        # Rectangle Tool
-        btn_rect = Gtk.ToolButton()
-        btn_rect.set_icon_name("draw-rectangle-symbolic")
-        btn_rect.set_tooltip_text(_("Rectangle"))
-        btn_rect.connect("clicked", self.set_canvas_mode, "rectangle")
-        toolbar.insert(btn_rect, -1)
+        vbox_toolbar.pack_start(toolbar1, False, False, 0)
 
-        # Circle Tool
-        btn_circ = Gtk.ToolButton()
-        btn_circ.set_icon_name("draw-ellipse-symbolic")
-        btn_circ.set_tooltip_text(_("Circle"))
-        btn_circ.connect("clicked", self.set_canvas_mode, "circle")
-        toolbar.insert(btn_circ, -1)
-        
-        # Crop Tool
-        btn_crop = Gtk.ToolButton()
-        btn_crop.set_icon_name("edit-cut-symbolic")
-        btn_crop.set_tooltip_text(_("Crop Image"))
-        btn_crop.connect("clicked", self.set_canvas_mode, "crop")
-        toolbar.insert(btn_crop, -1)
-        
-        toolbar.insert(Gtk.SeparatorToolItem(), -1)
-
-        # Line Tool
-        btn_line = Gtk.ToolButton()
-        btn_line.set_icon_name("draw-line-symbolic")
-        btn_line.set_tooltip_text(_("Line"))
-        btn_line.connect("clicked", self.set_canvas_mode, "line")
-        toolbar.insert(btn_line, -1)
-
-        # Arrow Tool
-        btn_arrow = Gtk.ToolButton()
-        btn_arrow.set_icon_name("go-next-symbolic")
-        btn_arrow.set_tooltip_text(_("Arrow"))
-        btn_arrow.connect("clicked", self.set_canvas_mode, "arrow")
-        toolbar.insert(btn_arrow, -1)
-
-        toolbar.insert(Gtk.SeparatorToolItem(), -1)
-
-        # --- Properties Bar ---
-        prop_box = Gtk.Box(spacing=6)
-        prop_box.set_margin_start(4)
-        prop_box.set_margin_end(4)
+        # Row 2: Properties
+        prop_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        prop_row.set_margin_top(2)
+        prop_row.set_margin_bottom(6)
+        prop_row.set_halign(Gtk.Align.CENTER)
         
         # Color
         color_btn = Gtk.ColorButton.new_with_rgba(Gdk.RGBA(1, 0, 0, 1))
-        color_btn.set_tooltip_text(_("Stroke Color"))
         color_btn.connect("color-set", lambda b: self.canvas.set_stroke_color(b.get_rgba()))
-        prop_box.pack_start(color_btn, False, False, 0)
+        prop_row.pack_start(color_btn, False, False, 0)
         
         # Line Width
         adj = Gtk.Adjustment(3, 1, 50, 1, 5, 0)
         width_spin = Gtk.SpinButton.new(adj, 1, 0)
-        width_spin.set_tooltip_text(_("Line Width"))
         width_spin.connect("value-changed", lambda s: self.canvas.set_line_width(s.get_value()))
-        prop_box.pack_start(width_spin, False, False, 0)
+        prop_row.pack_start(width_spin, False, False, 0)
         
-        # Fill Toggle
+        # Fill
         fill_check = Gtk.CheckButton.new_with_label(_("Fill"))
         fill_check.connect("toggled", lambda c: self.canvas.set_fill_active(c.get_active()))
-        prop_box.pack_start(fill_check, False, False, 0)
+        prop_row.pack_start(fill_check, False, False, 0)
         
         # Opacity
+        prop_row.pack_start(Gtk.Label(label=_("Opacity:")), False, False, 0)
         opacity_scale = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL, 0.1, 1.0, 0.1)
         opacity_scale.set_value(1.0)
-        opacity_scale.set_size_request(80, -1)
-        opacity_scale.set_tooltip_text(_("Opacity"))
+        opacity_scale.set_size_request(100, -1)
         opacity_scale.connect("value-changed", lambda s: self.canvas.set_opacity(s.get_value()))
-        prop_box.pack_start(opacity_scale, False, False, 0)
+        prop_row.pack_start(opacity_scale, False, False, 0)
 
-        prop_box.show_all()
-        prop_item = Gtk.ToolItem()
-        prop_item.set_expand(False) # CRITICAL: Don't let propery box expand horizontally
-        prop_item.add(prop_box)
-        toolbar.insert(prop_item, -1)
-
-        # Blue/Eraser (Placeholder for now)
-        btn_blue = Gtk.ToolButton()
-        btn_blue.set_icon_name("edit-clear-symbolic")
-        btn_blue.set_tooltip_text(_("Blue Pen"))
-        btn_blue.connect("clicked", self.set_canvas_mode, "eraser")
-        toolbar.insert(btn_blue, -1)
+        vbox_toolbar.pack_start(prop_row, False, False, 0)
+        vbox_toolbar.show_all()
         
-        toolbar.show_all()
-        box.pack_start(toolbar, False, False, 0)
-        box.reorder_child(toolbar, 0)
+        box.pack_start(vbox_toolbar, False, False, 0)
+        box.reorder_child(vbox_toolbar, 0)
         
         # Replace Image with Canvas
         self.old_image_widget = self.builder.get_object("screenshot_image")
         self.old_image_widget.hide()
-        # We keep it in the hierarchy or remove it? Removing cleanly is better.
-        # But for safety, let's just create Canvas and pack it.
         
         from canvas import CanvasWidget
         self.canvas = CanvasWidget()
         self.canvas.show()
 
-        # Container for the canvas - NO EXPAND, use centering box
+        # Center the canvas inside the container
         self.preview_container = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self.preview_container.set_valign(Gtk.Align.CENTER)
         self.preview_container.set_halign(Gtk.Align.CENTER)
@@ -354,16 +318,6 @@ class MainWindow():
         self.preview_container.show_all()
 
         box.pack_start(self.preview_container, True, True, 0)
-        
-        # Add Save Button explicitly here if needed, or reuse existing flow if there's a save button.
-        # There isn't a save button in the UI XML shown (only placeholders or hidden).
-        # We need a Save button in the toolbar.
-        
-        btn_save = Gtk.ToolButton()
-        btn_save.set_icon_name("document-save-symbolic")
-        btn_save.set_tooltip_text(_("Save"))
-        btn_save.connect("clicked", self.save_canvas)
-        toolbar.insert(btn_save, -1)
 
         if self.fixed_size:
             self.apply_fixed_layout()
@@ -425,7 +379,7 @@ class MainWindow():
 
     def apply_fixed_layout(self, width=None, height=None):
         if width is None or height is None:
-            # Reverting to Main Page (Compact)
+            # Reverting to Main Page (Compact Menu)
             if not self.fixed_size:
                 return
             width, height = self.fixed_size
@@ -433,38 +387,47 @@ class MainWindow():
         else:
             is_main = False
         
-        # Reset constraints before applying new ones
+        # CRITICAL: Reset ALL constraints before applying new ones
         self.window.set_geometry_hints(None, None, 0)
-        
+        self.window.set_resizable(True)
+
         if is_main:
-            self.window.set_resizable(False)
+            # Force small main menu size
             self.stack.set_size_request(-1, -1)
             self.main_content_box.set_size_request(-1, -1)
+            if hasattr(self, 'preview_container'):
+                self.preview_container.set_size_request(-1, -1)
+
+            # Strict hints for main menu
+            geometry = Gdk.Geometry()
+            geometry.min_width = width
+            geometry.max_width = width
+            geometry.min_height = height
+            geometry.max_height = height
+            self.window.set_geometry_hints(None, geometry, Gdk.WindowHints.MIN_SIZE | Gdk.WindowHints.MAX_SIZE)
             self.window.resize(width, height)
+            self.window.set_resizable(False)
             return
 
-        # Screenshot Page Logic
+        # Screenshot Preview Logic
         self.current_fixed_size = (width, height)
         
-        if hasattr(self, 'preview_container') and self.preview_container is not None:
+        if hasattr(self, 'preview_container'):
              self.preview_container.set_size_request(width, height)
             
         if hasattr(self, 'canvas'):
             self.canvas.set_size_request(width, height)
 
-        ui_height_offset = 120 # Header + Toolbar buffer
-        
-        target_window_width = max(width, 600) # Minimum to fit toolbar
+        ui_height_offset = 150 # Buffer for Header + Two-row toolbar
         
         geometry = Gdk.Geometry()
-        geometry.min_width = target_window_width
-        geometry.max_width = target_window_width
+        geometry.min_width = width
+        geometry.max_width = width
         geometry.min_height = height + ui_height_offset
         geometry.max_height = height + ui_height_offset
         
-        self.window.set_resizable(True)
         self.window.set_geometry_hints(None, geometry, Gdk.WindowHints.MIN_SIZE | Gdk.WindowHints.MAX_SIZE)
-        self.window.resize(target_window_width, height + ui_height_offset)
+        self.window.resize(width, height + ui_height_offset)
         self.window.set_resizable(False)
 
     def on_window_size_allocate(self, widget, allocation):
