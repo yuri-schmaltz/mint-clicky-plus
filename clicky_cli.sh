@@ -8,7 +8,7 @@ LIB_DIR="$REPO_ROOT/usr/lib/clicky"
 SCHEMA_DIR="$REPO_ROOT/usr/share/glib-2.0/schemas"
 
 # Compile schemas locally if they aren't already valid or update is needed
-if [ -f "$SCHEMA_DIR/org.x.clicky.gschema.xml" ]; then
+if [ -f "$SCHEMA_DIR/org.x.clickyplus.gschema.xml" ]; then
     echo "Compiling GSettings schemas locally..."
     glib-compile-schemas "$SCHEMA_DIR"
 fi

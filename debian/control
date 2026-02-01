@@ -1,4 +1,4 @@
-Source: clicky
+Source: clicky-plus
 Section: gnome
 Priority: optional
 Maintainer: Linux Mint <root@linuxmint.com>
@@ -6,7 +6,7 @@ Build-Depends: debhelper (>= 9)
 Standards-Version: 3.9.6
 Rules-Requires-Root: no
 
-Package: clicky
+Package: clicky-plus
 Architecture: all
 Depends: gir1.2-xapp-1.0 (>= 1.4),
          gir1.2-gsound-1.0,

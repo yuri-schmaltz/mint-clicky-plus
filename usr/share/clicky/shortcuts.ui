@@ -32,6 +32,12 @@
                 <property name="accelerator">&lt;CONTROL&gt;Q &lt;CONTROL&gt;W</property>
                 <property name="title" translatable="yes">Quit</property>
               </object>
+            <child>
+              <object class="GtkShortcutsShortcut">
+                <property name="visible">1</property>
+                <property name="accelerator">&lt;Shift&gt;&lt;Super&gt;s</property>
+                <property name="title" translatable="yes">Capture area</property>
+              </object>
             </child>
           </object>
         </child>

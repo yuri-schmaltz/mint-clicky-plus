@@ -19,7 +19,7 @@ from gi.repository import Gtk, Gdk, Gio, XApp, GLib
 import utils
 from common import *
 
-setproctitle.setproctitle("clicky")
+setproctitle.setproctitle("clickyplus")
 
 # i18n
 APP = 'clicky'
@@ -92,7 +92,7 @@ class MainWindow():
     def __init__(self, application):
 
         self.application = application
-        self.settings = Gio.Settings(schema_id="org.x.clicky")
+        self.settings = Gio.Settings(schema_id="org.x.clickyplus")
 
         # Main UI
         gladefile = os.path.join(SHARE_DIR, "clicky.ui")
@@ -100,7 +100,7 @@ class MainWindow():
         self.builder.set_translation_domain(APP)
         self.builder.add_from_file(gladefile)
         self.window = self.builder.get_object("main_window")
-        self.window.set_title(_("Screenshot"))
+        self.window.set_title(_("Clicky Plus"))
         self.window.set_icon_name("clicky")
         self.window.set_resizable(False)
         self.stack = self.builder.get_object("stack")
@@ -495,7 +495,7 @@ class MainWindow():
         dlg = Gtk.AboutDialog()
         dlg.set_transient_for(self.window)
         dlg.set_title(_("About"))
-        dlg.set_program_name(_("Screenshot"))
+        dlg.set_program_name(_("Clicky Plus"))
         dlg.set_comments(_("Save images of your screen or individual windows"))
         try:
             h = open('/usr/share/common-licenses/GPL', encoding="utf-8")
@@ -508,10 +508,10 @@ class MainWindow():
         except Exception as e:
             print (e)
 
-        dlg.set_version("__DEB_VERSION__")
+        dlg.set_version("1.1.0")
         dlg.set_icon_name("clicky")
         dlg.set_logo_icon_name("clicky")
-        dlg.set_website("https://www.github.com/linuxmint/clicky")
+        dlg.set_website("https://github.com/yuri-schmaltz/mint-clicky")
         def close(w, res):
             if res == Gtk.ResponseType.CANCEL or res == Gtk.ResponseType.DELETE_EVENT:
                 w.destroy()

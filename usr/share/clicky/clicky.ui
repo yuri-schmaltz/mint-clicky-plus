@@ -17,7 +17,7 @@
         <child>
           <object class="GtkModelButton" id="button_about">
             <property name="visible">True</property>
-            <property name="text" translatable="yes">Sobre o Captura de tela</property>
+            <property name="text" translatable="yes">Sobre o Clicky Plus</property>
           </object>
         </child>
       </object>
@@ -49,17 +49,6 @@
                 <property name="icon_name">xsi-go-previous-symbolic</property>
               </object>
             </child>
-          </object>
-        </child>
-        <child>
-          <object class="GtkButton" id="button_take_screenshot">
-            <property name="label" translatable="yes">Capturar tela</property>
-            <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="receives_default">True</property>
-            <style>
-              <class name="suggested-action"/>
-            </style>
           </object>
         </child>
         <child>
@@ -100,6 +89,17 @@
                 <property name="orientation">vertical</property>
                 <property name="border_width">24</property>
                 <property name="spacing">18</property>
+                <child>
+                  <object class="GtkButton" id="button_take_screenshot">
+                    <property name="label" translatable="yes">Capturar tela</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                    <style>
+                      <class name="suggested-action"/>
+                    </style>
+                  </object>
+                </child>
                 <child>
                   <object class="GtkLabel">
                     <property name="visible">True</property>

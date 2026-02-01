@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schemalist>
-  <schema id="org.x.clicky" path="/org/x/clicky/">
+  <schema id="org.x.clickyplus" path="/org/x/clickyplus/">
     <key type="b" name="prefer-dark-mode">
       <default>true</default>
       <summary></summary>

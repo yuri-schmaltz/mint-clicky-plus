@@ -1,4 +1,4 @@
-# Screenshot (Clicky)
+# Clicky Plus
 
 Aplicativo de captura de tela para desktop com interface GTK.
 
