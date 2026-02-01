@@ -21,6 +21,7 @@ fi
 # Set Environment Variables
 export PYTHONPATH="$LIB_DIR:$PYTHONPATH"
 export GSETTINGS_SCHEMA_DIR="$SCHEMA_DIR"
+export XDG_DATA_DIRS="$REPO_ROOT/usr/share:$XDG_DATA_DIRS"
 
 echo "Starting Clicky from local source..."
 echo "PYTHONPATH: $PYTHONPATH"

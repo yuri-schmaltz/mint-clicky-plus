@@ -251,6 +251,32 @@
                             <child>
                               <object class="GtkLabel">
                                 <property name="visible">True</property>
+                                <property name="label" translatable="yes">Som de captura</property>
+                                <property name="hexpand">True</property>
+                                <property name="halign">start</property>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkSwitch" id="switch_sound">
+                                <property name="visible">True</property>
+                                <property name="can_focus">True</property>
+                                <property name="valign">center</property>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkListBoxRow">
+                        <property name="visible">True</property>
+                        <child>
+                          <object class="GtkBox">
+                            <property name="visible">True</property>
+                            <property name="margin">12</property>
+                            <child>
+                              <object class="GtkLabel">
+                                <property name="visible">True</property>
                                 <property name="label" translatable="yes">Atraso em segundos</property>
                                 <property name="hexpand">True</property>
                                 <property name="halign">start</property>

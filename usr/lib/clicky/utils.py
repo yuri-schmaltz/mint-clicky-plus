@@ -150,12 +150,13 @@ def select_area_interactive():
     while Gtk.events_pending():
         Gtk.main_iteration()
 
+    cursor = Gdk.Cursor.new_from_name(display, "crosshair")
     seat = display.get_default_seat()
     grab_status = seat.grab(
         window.get_window(),
         Gdk.SeatCapabilities.POINTER | Gdk.SeatCapabilities.KEYBOARD,
         True,
-        None,
+        cursor,
         None,
         None,
         None,
@@ -205,7 +206,7 @@ def capture_via_gnome_dbus(options):
         interface = bus.get_object('org.gnome.Shell.Screenshot', '/org/gnome/Shell/Screenshot')
         manager = dbus.Interface(interface, 'org.gnome.Shell.Screenshot')
 
-        if options.enable_sound:
+        if options.enable_sound and options.mode != CAPTURE_MODE_AREA:
             play_sound_effect()
 
         if options.mode == CAPTURE_MODE_SCREEN:
@@ -216,6 +217,8 @@ def capture_via_gnome_dbus(options):
             rect = select_area_interactive()
             if rect is None:
                 return None
+            if options.enable_sound:
+                play_sound_effect()
             (success, filename_used) = manager.ScreenshotArea(rect.x, rect.y, rect.width, rect.height, options.enable_flash, filename)
 
         if success:

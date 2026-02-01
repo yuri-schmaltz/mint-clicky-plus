@@ -113,6 +113,7 @@ class MainWindow():
         self.toggle_mode_area = self.builder.get_object("toggle_mode_area")
         
         self.switch_pointer = self.builder.get_object("switch_pointer")
+        self.switch_sound = self.builder.get_object("switch_sound")
         self.spin_delay = self.builder.get_object("spin_delay")
 
         # CSS
@@ -131,8 +132,8 @@ class MainWindow():
         elif mode == "area": self.toggle_mode_area.set_active(True)
 
         self.settings.bind("include-pointer", self.switch_pointer, "active", Gio.SettingsBindFlags.DEFAULT)
+        self.settings.bind("enable-sound", self.switch_sound, "active", Gio.SettingsBindFlags.DEFAULT)
         self.settings.bind("delay", self.spin_delay, "value", Gio.SettingsBindFlags.DEFAULT)
-        # self.settings.bind("enable-sound", self.checkbox_sound, "active", Gio.SettingsBindFlags.DEFAULT) # Removed from UI
 
         # import xapp.SettingsWidgets
         # spin = xapp.SettingsWidgets.SpinButton(_("Delay"), units="seconds")
