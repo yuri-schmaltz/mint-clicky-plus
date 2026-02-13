@@ -276,6 +276,8 @@ class MainWindow():
         add_tool("draw-ellipse-symbolic", _("Circle"), "circle")
         add_tool("draw-line-symbolic", _("Line"), "line")
         add_tool("go-next-symbolic", _("Arrow"), "arrow")
+        add_tool("format-text-bold-symbolic", _("Text"), "text")
+        add_tool("weather-fog-symbolic", _("Blur"), "blur")
         toolbar1.insert(Gtk.SeparatorToolItem(), -1)
         add_tool("edit-cut-symbolic", _("Crop Image"), "crop")
         add_tool("edit-clear-symbolic", _("Eraser"), "eraser")
@@ -334,11 +336,25 @@ class MainWindow():
         self.canvas.show()
 
         # Center the canvas inside the container
-        self.preview_container = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        # Center the canvas inside the container
+        # Use Overlay to support floating widgets (Text Entry)
+        self.preview_container = Gtk.Overlay()
         self.preview_container.set_valign(Gtk.Align.CENTER)
         self.preview_container.set_halign(Gtk.Align.CENTER)
         self.preview_container.add(self.canvas)
+        
+        # Hidden text entry for text tool
+        self.text_entry = Gtk.Entry()
+        self.text_entry.set_visible(False)
+        self.text_entry.set_width_chars(20)
+        # We don't fix position yet, the canvas will move it
+        self.preview_container.add_overlay(self.text_entry)
+        
+        self.canvas.set_text_entry(self.text_entry, self.preview_container)
+        
         self.preview_container.show_all()
+        # Hide entry again as show_all shows it
+        self.text_entry.hide()
 
         box.pack_start(self.preview_container, True, True, 0)
 

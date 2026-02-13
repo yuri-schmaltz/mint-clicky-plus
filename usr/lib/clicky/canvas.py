@@ -3,6 +3,10 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gdk, GdkPixbuf
 import cairo
 import math
+from gi.repository import Pango, PangoCairo
+from PIL import Image, ImageFilter
+import sys
+import ctypes
 
 class CanvasWidget(Gtk.DrawingArea):
     def __init__(self):
@@ -45,6 +49,49 @@ class CanvasWidget(Gtk.DrawingArea):
         
     def set_opacity(self, opacity):
         self.opacity = opacity
+
+    def set_text_entry(self, entry, overlay):
+        self.text_entry = entry
+        self.overlay = overlay
+        self.text_entry.connect("activate", self.on_text_commit)
+        self.text_entry.connect("focus-out-event", self.on_text_focus_out)
+        
+    def on_text_commit(self, entry):
+        text = entry.get_text()
+        if text:
+            self.commit_text(text)
+        entry.hide()
+        self.text_entry.set_text("")
+        # Return focus to canvas?
+        # self.grab_focus()
+
+    def on_text_focus_out(self, entry, event):
+        self.on_text_commit(entry)
+        return False
+        
+    def commit_text(self, text):
+        cr = cairo.Context(self.surface)
+        self.apply_style(cr)
+        
+        # Adjust position to baseline (approx)
+        # Entry widget has height, text baseline is usually middle-ish.
+        # Let's verify start_x, start_y
+        
+        layout = PangoCairo.create_layout(cr)
+        layout.set_text(text, -1)
+        
+        desc = Pango.FontDescription("Sans Bold 20")
+        desc.set_size(int(self.line_width * 10 * Pango.SCALE)) # Scale font with line width?
+        # Or fixed size? Or separate font size control?
+        # For now, let's use line_width as a proxy or fixed.
+        # let's use a reasonable size.
+        desc.set_absolute_size(20 * Pango.SCALE + self.line_width * Pango.SCALE)
+        layout.set_font_description(desc)
+        
+        cr.move_to(self.start_x, self.start_y)
+        PangoCairo.show_layout(cr, layout)
+        
+        self.queue_draw()
 
     def set_pixbuf(self, pixbuf):
         self.original_pixbuf = pixbuf
@@ -131,6 +178,15 @@ class CanvasWidget(Gtk.DrawingArea):
             # For Pen/Highlighter, we start drawing immediately
             if self.current_tool in ['pen', 'highlighter', 'eraser']:
                 pass # Handled in motion
+            elif self.current_tool == 'text':
+                self.text_entry.set_halign(Gtk.Align.START)
+                self.text_entry.set_valign(Gtk.Align.START)
+                self.text_entry.set_margin_start(int(event.x))
+                self.text_entry.set_margin_top(int(event.y))
+                self.text_entry.set_visible(True)
+                self.text_entry.grab_focus()
+                
+        return True
                 
         return True
 
@@ -158,6 +214,8 @@ class CanvasWidget(Gtk.DrawingArea):
                 self.commit_shape(event.x, event.y)
             elif self.current_tool == 'crop':
                 self.apply_crop(event.x, event.y)
+            elif self.current_tool == 'blur':
+                self.apply_blur(event.x, event.y)
             elif self.current_tool in ['pen', 'highlighter', 'eraser']:
                 self.draw_stroke(event.x, event.y) # Final segment
         return True
@@ -212,6 +270,17 @@ class CanvasWidget(Gtk.DrawingArea):
             cr.set_source_rgba(1, 1, 1, 1)
             cr.set_line_width(1)
             cr.set_dash([4.0, 4.0], 0)
+            cr.rectangle(x, y, w, h)
+            cr.stroke()
+            cr.stroke()
+            return
+            
+        if self.current_tool == 'blur':
+            cr.set_source_rgba(0.5, 0.5, 0.5, 0.3)
+            cr.rectangle(x, y, w, h)
+            cr.fill()
+            cr.set_source_rgba(1, 1, 1, 0.5)
+            cr.set_line_width(1)
             cr.rectangle(x, y, w, h)
             cr.stroke()
             return
@@ -300,6 +369,56 @@ class CanvasWidget(Gtk.DrawingArea):
         
         # We should notify parent to resize window? 
         # For now, size request handles widget size, window might stay large.
+
+    def apply_blur(self, end_x, end_y):
+        if not self.surface: return
+        
+        x = int(min(self.start_x, end_x))
+        y = int(min(self.start_y, end_y))
+        w = int(abs(self.start_x - end_x))
+        h = int(abs(self.start_y - end_y))
+        
+        if w < 5 or h < 5: return
+        
+        # Flush surface
+        self.surface.flush()
+        
+        data = self.surface.get_data()
+        width = self.surface.get_width()
+        height = self.surface.get_height()
+        stride = self.surface.get_stride()
+        
+        try:
+            # Create PIL Image from surface data
+            # Cairo ARGB32 is BGRA (on little endian)
+            img = Image.frombuffer("RGBA", (width, height), data, "raw", "BGRA", stride, 1)
+            
+            # Crop
+            crop = img.crop((x, y, x+w, y+h))
+            
+            # Blur
+            blurred = crop.filter(ImageFilter.GaussianBlur(radius=10))
+            
+            # Convert back to BGRA for Cairo
+            r, g, b, a = blurred.split()
+            bgra = Image.merge("RGBA", (b, g, r, a))
+            
+            # Get bytes
+            buf = bytearray(bgra.tobytes())
+            
+            # Create temp surface
+            tmp_surface = cairo.ImageSurface.create_for_data(
+                buf, cairo.FORMAT_ARGB32, w, h, w*4)
+            
+            # Paint onto main surface
+            cr = cairo.Context(self.surface)
+            cr.set_source_surface(tmp_surface, x, y)
+            cr.paint()
+            
+            self.queue_draw()
+            
+        except Exception as e:
+            print("Blur error:", e)
 
     def draw_stroke(self, x, y):
         # Assuming start_x is set
