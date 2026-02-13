@@ -7,7 +7,7 @@ Standards-Version: 3.9.6
 Rules-Requires-Root: no
 
 Package: clicky-plus
-Architecture: all
+Architecture: amd64
 Depends: gir1.2-xapp-1.0 (>= 1.4),
          gir1.2-gsound-1.0,
          python3,
