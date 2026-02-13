@@ -8,16 +8,46 @@ import subprocess
 import warnings
 import sys
 import traceback
+import shortcuts
+import datetime
+from recorder import ScreenRecorder
 
 # Suppress GTK deprecation warnings
 warnings.filterwarnings("ignore")
 
 gi.require_version("Gtk", "3.0")
 gi.require_version('XApp', '1.0')
-from gi.repository import Gtk, Gdk, Gio, XApp, GLib
+from gi.repository import Gtk, Gdk, Gio, XApp, GLib, GdkPixbuf
 
 import utils
 from common import *
+
+class StopWindow(Gtk.Window):
+    def __init__(self, callback):
+        super().__init__(title="Clicky Stop")
+        self.set_keep_above(True)
+        self.set_decorated(False)
+        self.set_resizable(False)
+        self.callback = callback
+        
+        box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        box.set_spacing(5)
+        # Style
+        # context = box.get_style_context()
+        # context.add_class("background")
+        
+        btn = Gtk.Button(label=_("Stop Recording"))
+        # btn.get_style_context().add_class("destructive-action")
+        btn.connect("clicked", self.on_stop)
+        btn.set_size_request(120, 40)
+        
+        box.add(btn)
+        self.add(box)
+        self.show_all()
+        
+    def on_stop(self, widget):
+        self.callback()
+        self.destroy()
 
 setproctitle.setproctitle("clickyplus")
 
@@ -112,9 +142,18 @@ class MainWindow():
         self.toggle_mode_window = self.builder.get_object("toggle_mode_window")
         self.toggle_mode_area = self.builder.get_object("toggle_mode_area")
         
+        self.radio_type_photo = self.builder.get_object("radio_type_photo")
+        self.radio_type_video = self.builder.get_object("radio_type_video")
+        
+        self.chooser_folder = self.builder.get_object("chooser_folder")
+        self.switch_clipboard = self.builder.get_object("switch_clipboard")
+        self.combo_format = self.builder.get_object("combo_format")
+        self.entry_filename = self.builder.get_object("entry_filename")
+
         self.switch_pointer = self.builder.get_object("switch_pointer")
         self.switch_sound = self.builder.get_object("switch_sound")
         self.spin_delay = self.builder.get_object("spin_delay")
+        self.switch_set_default = self.builder.get_object("switch_set_default")
 
         # CSS
         provider = Gtk.CssProvider()
@@ -134,10 +173,26 @@ class MainWindow():
         self.settings.bind("include-pointer", self.switch_pointer, "active", Gio.SettingsBindFlags.DEFAULT)
         self.settings.bind("enable-sound", self.switch_sound, "active", Gio.SettingsBindFlags.DEFAULT)
         self.settings.bind("delay", self.spin_delay, "value", Gio.SettingsBindFlags.DEFAULT)
+        self.settings.bind("set-as-default", self.switch_set_default, "active", Gio.SettingsBindFlags.DEFAULT)
+        self.switch_set_default.connect("notify::active", self.on_set_default_toggled)
+
+        # Storage settings bindings
+        self.settings.bind("auto-copy-clipboard", self.switch_clipboard, "active", Gio.SettingsBindFlags.DEFAULT)
+        self.settings.bind("filename-pattern", self.entry_filename, "text", Gio.SettingsBindFlags.DEFAULT)
+        # Manual sync for folder chooser (GSettings doesn't bind 'current-folder' property of FileChooserButton)
+        save_dir = self.settings.get_string("save-directory")
+        if save_dir and os.path.exists(save_dir):
+            self.chooser_folder.set_current_folder(save_dir)
+        self.chooser_folder.connect("current-folder-changed", self.on_folder_changed)
+        # Using active-id for combo box
+        self.settings.bind("file-format", self.combo_format, "active-id", Gio.SettingsBindFlags.DEFAULT)
 
         # import xapp.SettingsWidgets
         # spin = xapp.SettingsWidgets.SpinButton(_("Delay"), units="seconds")
         # self.builder.get_object("box_options").pack_start(spin, False, False, 0)
+        
+        self.recorder = ScreenRecorder()
+        self.stop_window = None
 
         self.window.show()
         self.builder.get_object("button_take_screenshot").grab_focus()
@@ -156,10 +211,16 @@ class MainWindow():
         self.window.connect("key-press-event",self.on_key_press_event)
         self.window.connect("size-allocate", self.on_window_size_allocate)
         self.builder.get_object("go_back_button").connect("clicked", self.go_back)
-        self.builder.get_object("button_take_screenshot").connect("clicked", self.start_screenshot)
+        
+        self.btn_capture = self.builder.get_object("button_take_screenshot")
+        self.btn_capture.connect("clicked", self.on_capture_click)
+        
         self.toggle_mode_screen.connect("toggled", self.on_capture_mode_toggled)
         self.toggle_mode_window.connect("toggled", self.on_capture_mode_toggled)
         self.toggle_mode_area.connect("toggled", self.on_capture_mode_toggled)
+        
+        self.radio_type_photo.connect("toggled", self.on_type_toggled)
+        self.radio_type_video.connect("toggled", self.on_type_toggled)
 
         self.builder.get_object("button_help").connect("clicked", self.open_keyboard_shortcuts)
         self.builder.get_object("button_about").connect("clicked", self.open_about)
@@ -173,10 +234,54 @@ class MainWindow():
             mode = CAPTURE_MODE_AREA
         return mode
 
+    def on_set_default_toggled(self, switch, _pspec):
+        """Called when the 'set as default' toggle changes."""
+        if switch.get_active():
+            shortcuts.enable()
+        else:
+            shortcuts.disable()
+
     def on_capture_mode_toggled(self, widget):
-        if widget.get_active():
-            self.settings.set_string("capture-mode", self.get_capture_mode())
-      #  self.settings.set_string("capture-mode", self.get_capture_mode())
+        self.settings.set_string("capture-mode", self.get_capture_mode())
+        
+    def on_folder_changed(self, widget):
+        folder = widget.get_current_folder()
+        if folder:
+            self.settings.set_string("save-directory", folder)
+        
+    def on_type_toggled(self, widget):
+        is_video = self.radio_type_video.get_active()
+        if is_video:
+             self.btn_capture.set_label(_("Record Video"))
+             self.update_format_combo("video")
+        else:
+             self.btn_capture.set_label(_("Take Screenshot"))
+             self.update_format_combo("photo")
+             
+    def update_format_combo(self, mode):
+        # We need to block signals or rely on binding.
+        # Since binding is active, changing active-id might update settings.
+        # Better to just update list store if possible, but GtkComboBoxText doesn't expose store easily?
+        # Actually it does `get_model()`.
+        self.combo_format.remove_all()
+        if mode == "video":
+            self.combo_format.append("webm", "WebM")
+            self.combo_format.append("gif", "GIF")
+            self.combo_format.set_active_id("webm")
+        else:
+            self.combo_format.append("png", "PNG")
+            self.combo_format.append("jpg", "JPG")
+            self.combo_format.append("webp", "WebP")
+            # Restore setting or default
+            fmt = self.settings.get_string("file-format")
+            if fmt not in ["png", "jpg", "webp"]: fmt = "png"
+            self.combo_format.set_active_id(fmt)
+
+    def on_capture_click(self, widget):
+        if self.radio_type_video.get_active():
+            self.start_video_recording()
+        else:
+            self.start_screenshot(widget)
 
     def start_screenshot(self, widget):
         self.hide_window()
@@ -211,12 +316,13 @@ class MainWindow():
 
     def set_mode_and_capture(self, mode):
         # Map string mode to radio button or constant
+        # Map string mode to radio button or constant
         if mode == "screen":
-            self.radio_mode_screen.set_active(True)
+            self.toggle_mode_screen.set_active(True)
         elif mode == "window":
-            self.radio_mode_window.set_active(True)
+            self.toggle_mode_window.set_active(True)
         elif mode == "area":
-            self.radio_mode_area.set_active(True)
+            self.toggle_mode_area.set_active(True)
             
         # Start capture immediately
         self.start_screenshot(None)
@@ -225,6 +331,9 @@ class MainWindow():
         self.canvas.current_tool = mode
 
     def setup_canvas_ui(self):
+        if hasattr(self, 'canvas_toolbar'):
+            return
+
         # Get the container box
         box = self.builder.get_object("screenshot_box")
         
@@ -253,6 +362,8 @@ class MainWindow():
         add_tool("draw-ellipse-symbolic", _("Circle"), "circle")
         add_tool("draw-line-symbolic", _("Line"), "line")
         add_tool("go-next-symbolic", _("Arrow"), "arrow")
+        add_tool("format-text-bold-symbolic", _("Text"), "text")
+        add_tool("weather-fog-symbolic", _("Blur"), "blur")
         toolbar1.insert(Gtk.SeparatorToolItem(), -1)
         add_tool("edit-cut-symbolic", _("Crop Image"), "crop")
         add_tool("edit-clear-symbolic", _("Eraser"), "eraser")
@@ -298,6 +409,7 @@ class MainWindow():
 
         vbox_toolbar.pack_start(prop_row, False, False, 0)
         vbox_toolbar.show_all()
+        self.canvas_toolbar = vbox_toolbar
         
         box.pack_start(vbox_toolbar, False, False, 0)
         box.reorder_child(vbox_toolbar, 0)
@@ -311,48 +423,175 @@ class MainWindow():
         self.canvas.show()
 
         # Center the canvas inside the container
-        self.preview_container = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        # Center the canvas inside the container
+        # Use Overlay to support floating widgets (Text Entry)
+        self.preview_container = Gtk.Overlay()
         self.preview_container.set_valign(Gtk.Align.CENTER)
         self.preview_container.set_halign(Gtk.Align.CENTER)
         self.preview_container.add(self.canvas)
+        
+        # Hidden text entry for text tool
+        self.text_entry = Gtk.Entry()
+        self.text_entry.set_visible(False)
+        self.text_entry.set_width_chars(20)
+        # We don't fix position yet, the canvas will move it
+        self.preview_container.add_overlay(self.text_entry)
+        
+        self.canvas.set_text_entry(self.text_entry, self.preview_container)
+        
         self.preview_container.show_all()
+        # Hide entry again as show_all shows it
+        self.text_entry.hide()
 
         box.pack_start(self.preview_container, True, True, 0)
 
         if self.fixed_size:
             self.apply_fixed_layout()
 
+        if self.fixed_size:
+            self.apply_fixed_layout()
+            
+    def start_video_recording(self):
+        self.hide_window()
+        
+        # Determine Area
+        mode = self.get_capture_mode()
+        rect = None
+        
+        if mode == CAPTURE_MODE_AREA:
+             # Delay slightly to allow hide?
+             GLib.usleep(200000) # 0.2s
+             rect = utils.select_area_interactive()
+             if not rect:
+                 self.show_window()
+                 return
+             x, y, w, h = rect.x, rect.y, rect.width, rect.height
+        elif mode == CAPTURE_MODE_WINDOW:
+             # Window selection for video is tricky (window moves).
+             # Usually we grab window geometry once and fixed area.
+             # Reusing x11 capture logic for finding window?
+             # For now, let's treat Window same as Area (interactive selection) or use utils helper?
+             # utils.capture_via_x11 gets window geometry.
+             # We can't easily select window interactively without taking a screenshot first?
+             # utils.find_current_window() works based on active window *after* delay.
+             
+             # Fallback to Area selection for Window mode in Video (common pattern)
+             # Or auto-detect active window after delay?
+             
+             # Let's prompt for area for now to be safe/clear.
+             GLib.usleep(200000)
+             rect = utils.select_area_interactive()
+             if not rect:
+                 self.show_window()
+                 return
+             x, y, w, h = rect.x, rect.y, rect.width, rect.height
+        else:
+             # Full Screen
+             screen = Gdk.Screen.get_default()
+             x, y = 0, 0
+             w = screen.get_width()
+             h = screen.get_height()
+        
+        # Output File
+        save_dir = self.settings.get_string("save-directory")
+        if not save_dir:
+            save_dir = GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_PICTURES)
+            if not save_dir: save_dir = os.path.expanduser("~")
+            
+        fmt = self.combo_format.get_active_id() # Use combo value (video formats)
+        if not fmt: fmt = "webm"
+        
+        pattern = self.settings.get_string("filename-pattern")
+        try:
+             filename = datetime.datetime.now().strftime(pattern)
+        except:
+             filename = "Screencast"
+             
+        if not filename.lower().endswith("." + fmt):
+            filename += "." + fmt
+            
+        output_path = os.path.join(save_dir, filename)
+        
+        if self.recorder.start(x, y, w, h, output_path, fmt):
+             self.stop_window = StopWindow(self.stop_recording)
+             # Position stop window bottom right
+             stop_w, stop_h = 150, 60
+             screen_w = Gdk.Screen.get_default().get_width()
+             screen_h = Gdk.Screen.get_default().get_height()
+             self.stop_window.move(screen_w - stop_w - 20, screen_h - stop_h - 50)
+        else:
+             self.show_window()
+             self.show_error_dialog(_("Failed to start recording"))
+
+    def stop_recording(self):
+        saved_path = self.recorder.stop()
+        self.stop_window = None
+        self.show_window()
+        
+        if saved_path:
+             notification = Gio.Notification.new(_("SCREENCAST SAVED"))
+             notification.set_body(saved_path)
+             notification.set_icon(Gio.ThemedIcon.new("video-x-generic"))
+             if self.application:
+                 self.application.send_notification("clicky-video", notification)
+
     def save_canvas(self, widget):
         if not self.canvas: return
         
         pixbuf = self.canvas.get_result_pixbuf()
-        if pixbuf:
-            pictures_dir = GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_PICTURES)
-            if not pictures_dir:
-                pictures_dir = os.path.expanduser("~")
-            captures_dir_name = _("Captures")
-            captures_dir = os.path.join(pictures_dir, captures_dir_name)
-            os.makedirs(captures_dir, exist_ok=True)
+        if not pixbuf: return
 
-            dialog = Gtk.FileChooserDialog(
-                title=_("Save Screenshot"),
-                parent=self.window,
-                action=Gtk.FileChooserAction.SAVE
-            )
-            dialog.add_buttons(
-                Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
-                Gtk.STOCK_SAVE, Gtk.ResponseType.OK
-            )
-            dialog.set_do_overwrite_confirmation(True)
-            dialog.set_current_folder(captures_dir)
-            dialog.set_current_name(_("Screenshot.png"))
+        # Settings
+        save_dir = self.settings.get_string("save-directory")
+        if not save_dir:
+            save_dir = GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_PICTURES)
+            if not save_dir: 
+                save_dir = os.path.expanduser("~")
+        
+        fmt = self.settings.get_string("file-format")
+        ptrn = self.settings.get_string("filename-pattern")
+
+        try:
+            filename = datetime.datetime.now().strftime(ptrn)
+        except:
+             filename = "Screenshot-" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+        
+        if not filename.lower().endswith("." + fmt):
+            filename += "." + fmt
             
-            response = dialog.run()
-            if response == Gtk.ResponseType.OK:
-                filename = dialog.get_filename()
-                pixbuf.savev(filename, "png", [], [])
+        full_path = os.path.join(save_dir, filename)
+        
+        if not os.path.exists(save_dir):
+            try:
+                os.makedirs(save_dir)
+            except:
+                self.show_error_dialog(_("Could not create directory") + ": " + save_dir)
+                return
+        
+        try:
+            if fmt == "jpg":
+                pixbuf.savev(full_path, "jpeg", ["quality"], ["90"])
+            elif fmt == "webp":
+                 try:
+                     pixbuf.savev(full_path, "webp", [], [])
+                 except: # Fallback
+                     full_path = full_path.rsplit('.', 1)[0] + ".png"
+                     pixbuf.savev(full_path, "png", [], [])
+            else:
+                pixbuf.savev(full_path, "png", [], [])
+
+            notification = Gio.Notification.new(_("Screenshot Saved"))
+            notification.set_body(full_path)
+            notification.set_icon(Gio.ThemedIcon.new("image-x-generic"))
             
-            dialog.destroy()
+            if self.application:
+                self.application.send_notification("clicky-saved", notification)
+            
+            # Show saved state in UI or trigger open folder
+            # For now, just a visual cue could be helpful, but notification handles it.
+            
+        except Exception as e:
+            self.show_error_dialog(str(e))
 
 
     def go_back(self, widget):
@@ -367,15 +606,15 @@ class MainWindow():
         clipboard.store()
 
     def show_notification(self):
-        notification = Gio.Notification.new(_("Screenshot Saved"))
-        notification.set_body(_("Image copied to clipboard. Click to edit."))
+        notification = Gio.Notification.new(_("Screenshot Taken"))
+        if self.settings.get_boolean("auto-copy-clipboard"):
+            notification.set_body(_("Image copied to clipboard."))
+        else:
+            notification.set_body(_("Click to edit and save."))
         notification.set_icon(Gio.ThemedIcon.new("clicky"))
         
-        # Action to open window (default action)
-        # For simplicity, since the app is already running (hidden or showing), 
-        # clicking usually activates the app. We just need to ensure the window is shown.
-        
-        self.application.send_notification("screenshot-taken", notification)
+        if self.application:
+            self.application.send_notification("screenshot-taken", notification)
 
     def apply_fixed_layout(self, width=None, height=None):
         if width is None or height is None:
@@ -440,9 +679,10 @@ class MainWindow():
             options = Options(self.settings)
             pixbuf = utils.capture_pixbuf(options)
             
-            # Post-capture actions (Win 11 style)
+            # Post-capture actions
             if pixbuf:
-                self.copy_to_clipboard(pixbuf)
+                if self.settings.get_boolean("auto-copy-clipboard"):
+                    self.copy_to_clipboard(pixbuf)
                 self.show_notification()
                 
                 # Setup Canvas Logic

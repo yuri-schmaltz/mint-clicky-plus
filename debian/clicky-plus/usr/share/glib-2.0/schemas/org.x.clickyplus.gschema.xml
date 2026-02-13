@@ -51,5 +51,35 @@
       <summary></summary>
       <description></description>
     </key>
+    <key type="b" name="set-as-default">
+      <default>false</default>
+      <summary>Set as default screenshot tool</summary>
+      <description>When enabled, Clicky Plus replaces the system screenshot tool by taking over standard keyboard shortcuts.</description>
+    </key>
+    <key type="s" name="save-directory">
+      <default>''</default>
+      <summary>Directory to save screenshots</summary>
+      <description>The directory where screenshots will be saved. If empty, defaults to XDG Pictures directory.</description>
+    </key>
+    <key type="b" name="auto-copy-clipboard">
+      <default>false</default>
+      <summary>Automatically copy to clipboard</summary>
+      <description>If true, screenshots are copied to clipboard automatically after capture.</description>
+    </key>
+    <key type="s" name="file-format">
+      <choices>
+        <choice value='png'/>
+        <choice value='jpg'/>
+        <choice value='webp'/>
+      </choices>
+      <default>'png'</default>
+      <summary>File format</summary>
+      <description>The file format for saved screenshots.</description>
+    </key>
+    <key type="s" name="filename-pattern">
+      <default>'Screenshot from %Y-%m-%d %H-%M-%S'</default>
+      <summary>Filename pattern</summary>
+      <description>strftime pattern for the filename.</description>
+    </key>
   </schema>
 </schemalist>

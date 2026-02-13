@@ -448,26 +448,41 @@ def capture_via_x11(options):
     rect.y = 0
     rect.height = 800
     rect.width = 600
-    frame_offset = { 0, 0, 0, 0 }
+    frame_offset = {"left": 0, "top": 0, "right": 0, "bottom": 0}
 
     # find current window
     window = None
     if options.mode == CAPTURE_MODE_WINDOW:
-        window = find_current_window()
+        if IS_X11_AVAILABLE:
+            window = find_current_window()
+        else:
+            # Fallback for Wayland if mode is window but we use X11 capture?
+            # Usually handled by higher level choosing capture_pixbuf
+            pass
     if window == None:
         window = root_window
 
     real_coords = window.get_frame_extents()
     screenshot_coords = crop_geometry(real_coords)
 
-    wm = find_xwindow(window)
+    wm = None
+    if IS_X11_AVAILABLE:
+        try:
+            wm = find_xwindow(window)
+        except Exception as e:
+            print("X11 find_xwindow failed:", e)
+
     if wm != None:
-        wm_window = GdkX11.X11Window.foreign_new_for_display(GdkX11.X11Display.get_default(), wm.id)
-        wm_real_coords = crop_geometry(wm_window.get_frame_extents())
-        frame_offset_left = real_coords.x - wm_real_coords.x
-        frame_offset_top = real_coords.y - wm_real_coords.y
-        frame_offset_right = wm_real_coords.width - real_coords.width - frame_offset_left
-        frame_offset_bottom = wm_real_coords.height - real_coords.height - frame_offset_top
+        try:
+            wm_window = GdkX11.X11Window.foreign_new_for_display(GdkX11.X11Display.get_default(), wm.id)
+            wm_real_coords = crop_geometry(wm_window.get_frame_extents())
+            frame_offset["left"] = real_coords.x - wm_real_coords.x
+            frame_offset["top"] = real_coords.y - wm_real_coords.y
+            frame_offset["right"] = wm_real_coords.width - real_coords.width - frame_offset["left"]
+            frame_offset["bottom"] = wm_real_coords.height - real_coords.height - frame_offset["top"]
+        except Exception as e:
+            print("X11 WM geometry calc failed:", e)
+            wm = None
 
     if options.mode == CAPTURE_MODE_AREA:
         rect = select_area_interactive()
@@ -506,8 +521,8 @@ def capture_via_x11(options):
                 # scale factor to the former to use display pixels for all our math.
                 rec_x = rectangle.x / scale_factor
                 rec_y = rectangle.y / scale_factor
-                rec_width = rectangle.width / scale_factor - (frame_offset_left + frame_offset_right)
-                rec_height = rectangle.height / scale_factor - (frame_offset_top + frame_offset_bottom)
+                rec_width = rectangle.width / scale_factor - (frame_offset["left"] + frame_offset["right"])
+                rec_height = rectangle.height / scale_factor - (frame_offset["top"] + frame_offset["bottom"])
 
                 if real_coords.x < 0:
                     rec_x += real_coords.x

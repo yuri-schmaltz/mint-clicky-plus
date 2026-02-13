@@ -179,8 +179,11 @@ class MainWindow():
         # Storage settings bindings
         self.settings.bind("auto-copy-clipboard", self.switch_clipboard, "active", Gio.SettingsBindFlags.DEFAULT)
         self.settings.bind("filename-pattern", self.entry_filename, "text", Gio.SettingsBindFlags.DEFAULT)
-        # Using filename property for chooser button (which is folder mode)
-        self.settings.bind("save-directory", self.chooser_folder, "filename", Gio.SettingsBindFlags.DEFAULT)
+        # Manual sync for folder chooser (GSettings doesn't bind 'current-folder' property of FileChooserButton)
+        save_dir = self.settings.get_string("save-directory")
+        if save_dir and os.path.exists(save_dir):
+            self.chooser_folder.set_current_folder(save_dir)
+        self.chooser_folder.connect("current-folder-changed", self.on_folder_changed)
         # Using active-id for combo box
         self.settings.bind("file-format", self.combo_format, "active-id", Gio.SettingsBindFlags.DEFAULT)
 
@@ -240,6 +243,11 @@ class MainWindow():
 
     def on_capture_mode_toggled(self, widget):
         self.settings.set_string("capture-mode", self.get_capture_mode())
+        
+    def on_folder_changed(self, widget):
+        folder = widget.get_current_folder()
+        if folder:
+            self.settings.set_string("save-directory", folder)
         
     def on_type_toggled(self, widget):
         is_video = self.radio_type_video.get_active()
