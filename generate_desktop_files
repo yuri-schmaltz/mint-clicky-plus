@@ -17,7 +17,7 @@ Icon=clicky
 Terminal=false
 Type=Application
 Encoding=UTF-8
-Categories=GTK;GNOME;Utility;X-GNOME-Utilities;
+Categories=Utility;GTK;
 Keywords=project;keywords;
 StartupNotify=false
 """

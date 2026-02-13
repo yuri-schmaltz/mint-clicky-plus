@@ -1,3 +1,10 @@
+clicky-plus (1.1.2) una; urgency=low
+
+  * Update desktop category to Accessories (Utility).
+  * Update default keyboard shortcuts script to register screen, area, and window shortcuts.
+
+ -- Antigravity AI <antigravity@google.com>  Thu, 13 Feb 2026 00:30:00 -0300
+
 clicky-plus (1.1.1) una; urgency=low
 
   * Release for amd64 architecture.
