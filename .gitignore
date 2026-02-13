@@ -2,3 +2,10 @@ usr/lib/clicky/__pycache__/canvas.cpython-312.pyc
 usr/lib/clicky/__pycache__/utils.cpython-312.pyc
 usr/lib/clicky/__pycache__/common.cpython-312.pyc
 usr/lib/clicky/__pycache__/shortcuts.cpython-312.pyc
+usr/lib/clicky/__pycache__/recorder.cpython-312.pyc
+tests/__pycache__/test_basic.cpython-312.pyc
+tests/__pycache__/test_cli.cpython-312.pyc
+tests/__pycache__/test_logic.cpython-312.pyc
+tests/__pycache__/test_recorder.cpython-312.pyc
+usr/lib/clicky/__pycache__/clicky.cpython-312.pyc
+tests/__pycache__/test_area_integration.cpython-312.pyc
