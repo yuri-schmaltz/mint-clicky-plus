@@ -9,6 +9,7 @@ import warnings
 import sys
 import traceback
 import shortcuts
+import datetime
 
 # Suppress GTK deprecation warnings
 warnings.filterwarnings("ignore")
@@ -113,6 +114,11 @@ class MainWindow():
         self.toggle_mode_window = self.builder.get_object("toggle_mode_window")
         self.toggle_mode_area = self.builder.get_object("toggle_mode_area")
         
+        self.chooser_folder = self.builder.get_object("chooser_folder")
+        self.switch_clipboard = self.builder.get_object("switch_clipboard")
+        self.combo_format = self.builder.get_object("combo_format")
+        self.entry_filename = self.builder.get_object("entry_filename")
+
         self.switch_pointer = self.builder.get_object("switch_pointer")
         self.switch_sound = self.builder.get_object("switch_sound")
         self.spin_delay = self.builder.get_object("spin_delay")
@@ -138,6 +144,14 @@ class MainWindow():
         self.settings.bind("delay", self.spin_delay, "value", Gio.SettingsBindFlags.DEFAULT)
         self.settings.bind("set-as-default", self.switch_set_default, "active", Gio.SettingsBindFlags.DEFAULT)
         self.switch_set_default.connect("notify::active", self.on_set_default_toggled)
+
+        # Storage settings bindings
+        self.settings.bind("auto-copy-clipboard", self.switch_clipboard, "active", Gio.SettingsBindFlags.DEFAULT)
+        self.settings.bind("filename-pattern", self.entry_filename, "text", Gio.SettingsBindFlags.DEFAULT)
+        # Using filename property for chooser button (which is folder mode)
+        self.settings.bind("save-directory", self.chooser_folder, "filename", Gio.SettingsBindFlags.DEFAULT)
+        # Using active-id for combo box
+        self.settings.bind("file-format", self.combo_format, "active-id", Gio.SettingsBindFlags.DEFAULT)
 
         # import xapp.SettingsWidgets
         # spin = xapp.SettingsWidgets.SpinButton(_("Delay"), units="seconds")
@@ -335,33 +349,59 @@ class MainWindow():
         if not self.canvas: return
         
         pixbuf = self.canvas.get_result_pixbuf()
-        if pixbuf:
-            pictures_dir = GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_PICTURES)
-            if not pictures_dir:
-                pictures_dir = os.path.expanduser("~")
-            captures_dir_name = _("Captures")
-            captures_dir = os.path.join(pictures_dir, captures_dir_name)
-            os.makedirs(captures_dir, exist_ok=True)
+        if not pixbuf: return
 
-            dialog = Gtk.FileChooserDialog(
-                title=_("Save Screenshot"),
-                parent=self.window,
-                action=Gtk.FileChooserAction.SAVE
-            )
-            dialog.add_buttons(
-                Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
-                Gtk.STOCK_SAVE, Gtk.ResponseType.OK
-            )
-            dialog.set_do_overwrite_confirmation(True)
-            dialog.set_current_folder(captures_dir)
-            dialog.set_current_name(_("Screenshot.png"))
+        # Settings
+        save_dir = self.settings.get_string("save-directory")
+        if not save_dir:
+            save_dir = GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_PICTURES)
+            if not save_dir: 
+                save_dir = os.path.expanduser("~")
+        
+        fmt = self.settings.get_string("file-format")
+        ptrn = self.settings.get_string("filename-pattern")
+
+        try:
+            filename = datetime.datetime.now().strftime(ptrn)
+        except:
+             filename = "Screenshot-" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+        
+        if not filename.lower().endswith("." + fmt):
+            filename += "." + fmt
             
-            response = dialog.run()
-            if response == Gtk.ResponseType.OK:
-                filename = dialog.get_filename()
-                pixbuf.savev(filename, "png", [], [])
+        full_path = os.path.join(save_dir, filename)
+        
+        if not os.path.exists(save_dir):
+            try:
+                os.makedirs(save_dir)
+            except:
+                self.show_error_dialog(_("Could not create directory") + ": " + save_dir)
+                return
+        
+        try:
+            if fmt == "jpg":
+                pixbuf.savev(full_path, "jpeg", ["quality"], ["90"])
+            elif fmt == "webp":
+                 try:
+                     pixbuf.savev(full_path, "webp", [], [])
+                 except: # Fallback
+                     full_path = full_path.rsplit('.', 1)[0] + ".png"
+                     pixbuf.savev(full_path, "png", [], [])
+            else:
+                pixbuf.savev(full_path, "png", [], [])
+
+            notification = Gio.Notification.new(_("Screenshot Saved"))
+            notification.set_body(full_path)
+            notification.set_icon(Gio.ThemedIcon.new("image-x-generic"))
             
-            dialog.destroy()
+            if self.application:
+                self.application.send_notification("clicky-saved", notification)
+            
+            # Show saved state in UI or trigger open folder
+            # For now, just a visual cue could be helpful, but notification handles it.
+            
+        except Exception as e:
+            self.show_error_dialog(str(e))
 
 
     def go_back(self, widget):
@@ -376,15 +416,15 @@ class MainWindow():
         clipboard.store()
 
     def show_notification(self):
-        notification = Gio.Notification.new(_("Screenshot Saved"))
-        notification.set_body(_("Image copied to clipboard. Click to edit."))
+        notification = Gio.Notification.new(_("Screenshot Taken"))
+        if self.settings.get_boolean("auto-copy-clipboard"):
+            notification.set_body(_("Image copied to clipboard."))
+        else:
+            notification.set_body(_("Click to edit and save."))
         notification.set_icon(Gio.ThemedIcon.new("clicky"))
         
-        # Action to open window (default action)
-        # For simplicity, since the app is already running (hidden or showing), 
-        # clicking usually activates the app. We just need to ensure the window is shown.
-        
-        self.application.send_notification("screenshot-taken", notification)
+        if self.application:
+            self.application.send_notification("screenshot-taken", notification)
 
     def apply_fixed_layout(self, width=None, height=None):
         if width is None or height is None:
@@ -449,9 +489,10 @@ class MainWindow():
             options = Options(self.settings)
             pixbuf = utils.capture_pixbuf(options)
             
-            # Post-capture actions (Win 11 style)
+            # Post-capture actions
             if pixbuf:
-                self.copy_to_clipboard(pixbuf)
+                if self.settings.get_boolean("auto-copy-clipboard"):
+                    self.copy_to_clipboard(pixbuf)
                 self.show_notification()
                 
                 # Setup Canvas Logic
