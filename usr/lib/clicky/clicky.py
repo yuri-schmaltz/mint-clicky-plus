@@ -8,6 +8,7 @@ import subprocess
 import warnings
 import sys
 import traceback
+import shortcuts
 
 # Suppress GTK deprecation warnings
 warnings.filterwarnings("ignore")
@@ -115,6 +116,7 @@ class MainWindow():
         self.switch_pointer = self.builder.get_object("switch_pointer")
         self.switch_sound = self.builder.get_object("switch_sound")
         self.spin_delay = self.builder.get_object("spin_delay")
+        self.switch_set_default = self.builder.get_object("switch_set_default")
 
         # CSS
         provider = Gtk.CssProvider()
@@ -134,6 +136,8 @@ class MainWindow():
         self.settings.bind("include-pointer", self.switch_pointer, "active", Gio.SettingsBindFlags.DEFAULT)
         self.settings.bind("enable-sound", self.switch_sound, "active", Gio.SettingsBindFlags.DEFAULT)
         self.settings.bind("delay", self.spin_delay, "value", Gio.SettingsBindFlags.DEFAULT)
+        self.settings.bind("set-as-default", self.switch_set_default, "active", Gio.SettingsBindFlags.DEFAULT)
+        self.switch_set_default.connect("notify::active", self.on_set_default_toggled)
 
         # import xapp.SettingsWidgets
         # spin = xapp.SettingsWidgets.SpinButton(_("Delay"), units="seconds")
@@ -173,10 +177,15 @@ class MainWindow():
             mode = CAPTURE_MODE_AREA
         return mode
 
+    def on_set_default_toggled(self, switch, _pspec):
+        """Called when the 'set as default' toggle changes."""
+        if switch.get_active():
+            shortcuts.enable()
+        else:
+            shortcuts.disable()
+
     def on_capture_mode_toggled(self, widget):
-        if widget.get_active():
-            self.settings.set_string("capture-mode", self.get_capture_mode())
-      #  self.settings.set_string("capture-mode", self.get_capture_mode())
+        self.settings.set_string("capture-mode", self.get_capture_mode())
 
     def start_screenshot(self, widget):
         self.hide_window()

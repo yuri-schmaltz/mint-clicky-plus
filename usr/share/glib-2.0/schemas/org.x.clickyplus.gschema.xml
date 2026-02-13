@@ -51,5 +51,10 @@
       <summary></summary>
       <description></description>
     </key>
+    <key type="b" name="set-as-default">
+      <default>false</default>
+      <summary>Set as default screenshot tool</summary>
+      <description>When enabled, Clicky Plus replaces the system screenshot tool by taking over standard keyboard shortcuts.</description>
+    </key>
   </schema>
 </schemalist>
