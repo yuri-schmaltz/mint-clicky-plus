@@ -10,9 +10,8 @@ e25b67f5223cd91155b3891137fc5da3  usr/share/applications/clicky.desktop
 3577ee9c6216535e58789f753caa1890  usr/share/clicky/clicky.css
 75103b8d3a4a2a5380c8ffc2cdd29f6a  usr/share/clicky/clicky.ui
 98746428d0fabc0100f0182a6213b5f5  usr/share/clicky/shortcuts.ui
-12175cfbf07541d92266cd9eea9ded48  usr/share/doc/clicky-plus/changelog.gz
+e96e89af1e3f6cab5400c7bd37e1b6da  usr/share/doc/clicky-plus/changelog.gz
 0dc20369bb04486765bf7cb1bd1b91b7  usr/share/doc/clicky-plus/copyright
-df593a68c91d40fea087215742566f43  usr/share/glib-2.0/schemas/gschemas.compiled
 c9bd1f7075b2b8706529f35317111fdf  usr/share/glib-2.0/schemas/org.x.clickyplus.gschema.xml
 21ec293a4cec1849e137ab43c7831482  usr/share/icons/hicolor/512x512/apps/clicky.png
 2c1221b5e0a5c831e0df278e0d4ee8ec  usr/share/locale/de/LC_MESSAGES/clicky.mo
