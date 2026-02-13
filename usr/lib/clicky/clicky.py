@@ -10,6 +10,7 @@ import sys
 import traceback
 import shortcuts
 import datetime
+from recorder import ScreenRecorder
 
 # Suppress GTK deprecation warnings
 warnings.filterwarnings("ignore")
@@ -20,6 +21,33 @@ from gi.repository import Gtk, Gdk, Gio, XApp, GLib
 
 import utils
 from common import *
+
+class StopWindow(Gtk.Window):
+    def __init__(self, callback):
+        super().__init__(title="Clicky Stop")
+        self.set_keep_above(True)
+        self.set_decorated(False)
+        self.set_resizable(False)
+        self.callback = callback
+        
+        box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        box.set_spacing(5)
+        # Style
+        # context = box.get_style_context()
+        # context.add_class("background")
+        
+        btn = Gtk.Button(label=_("Stop Recording"))
+        # btn.get_style_context().add_class("destructive-action")
+        btn.connect("clicked", self.on_stop)
+        btn.set_size_request(120, 40)
+        
+        box.add(btn)
+        self.add(box)
+        self.show_all()
+        
+    def on_stop(self, widget):
+        self.callback()
+        self.destroy()
 
 setproctitle.setproctitle("clickyplus")
 
@@ -114,6 +142,9 @@ class MainWindow():
         self.toggle_mode_window = self.builder.get_object("toggle_mode_window")
         self.toggle_mode_area = self.builder.get_object("toggle_mode_area")
         
+        self.radio_type_photo = self.builder.get_object("radio_type_photo")
+        self.radio_type_video = self.builder.get_object("radio_type_video")
+        
         self.chooser_folder = self.builder.get_object("chooser_folder")
         self.switch_clipboard = self.builder.get_object("switch_clipboard")
         self.combo_format = self.builder.get_object("combo_format")
@@ -156,6 +187,9 @@ class MainWindow():
         # import xapp.SettingsWidgets
         # spin = xapp.SettingsWidgets.SpinButton(_("Delay"), units="seconds")
         # self.builder.get_object("box_options").pack_start(spin, False, False, 0)
+        
+        self.recorder = ScreenRecorder()
+        self.stop_window = None
 
         self.window.show()
         self.builder.get_object("button_take_screenshot").grab_focus()
@@ -174,10 +208,18 @@ class MainWindow():
         self.window.connect("key-press-event",self.on_key_press_event)
         self.window.connect("size-allocate", self.on_window_size_allocate)
         self.builder.get_object("go_back_button").connect("clicked", self.go_back)
-        self.builder.get_object("button_take_screenshot").connect("clicked", self.start_screenshot)
+        self.window.connect("size-allocate", self.on_window_size_allocate)
+        self.builder.get_object("go_back_button").connect("clicked", self.go_back)
+        
+        self.btn_capture = self.builder.get_object("button_take_screenshot")
+        self.btn_capture.connect("clicked", self.on_capture_click)
+        
         self.toggle_mode_screen.connect("toggled", self.on_capture_mode_toggled)
         self.toggle_mode_window.connect("toggled", self.on_capture_mode_toggled)
         self.toggle_mode_area.connect("toggled", self.on_capture_mode_toggled)
+        
+        self.radio_type_photo.connect("toggled", self.on_type_toggled)
+        self.radio_type_video.connect("toggled", self.on_type_toggled)
 
         self.builder.get_object("button_help").connect("clicked", self.open_keyboard_shortcuts)
         self.builder.get_object("button_about").connect("clicked", self.open_about)
@@ -200,6 +242,40 @@ class MainWindow():
 
     def on_capture_mode_toggled(self, widget):
         self.settings.set_string("capture-mode", self.get_capture_mode())
+        
+    def on_type_toggled(self, widget):
+        is_video = self.radio_type_video.get_active()
+        if is_video:
+             self.btn_capture.set_label(_("Record Video"))
+             self.update_format_combo("video")
+        else:
+             self.btn_capture.set_label(_("Take Screenshot"))
+             self.update_format_combo("photo")
+             
+    def update_format_combo(self, mode):
+        # We need to block signals or rely on binding.
+        # Since binding is active, changing active-id might update settings.
+        # Better to just update list store if possible, but GtkComboBoxText doesn't expose store easily?
+        # Actually it does `get_model()`.
+        self.combo_format.remove_all()
+        if mode == "video":
+            self.combo_format.append("webm", "WebM")
+            self.combo_format.append("gif", "GIF")
+            self.combo_format.set_active_id("webm")
+        else:
+            self.combo_format.append("png", "PNG")
+            self.combo_format.append("jpg", "JPG")
+            self.combo_format.append("webp", "WebP")
+            # Restore setting or default
+            fmt = self.settings.get_string("file-format")
+            if fmt not in ["png", "jpg", "webp"]: fmt = "png"
+            self.combo_format.set_active_id(fmt)
+
+    def on_capture_click(self, widget):
+        if self.radio_type_video.get_active():
+            self.start_video_recording()
+        else:
+            self.start_screenshot(widget)
 
     def start_screenshot(self, widget):
         self.hide_window()
@@ -360,6 +436,93 @@ class MainWindow():
 
         if self.fixed_size:
             self.apply_fixed_layout()
+
+        if self.fixed_size:
+            self.apply_fixed_layout()
+            
+    def start_video_recording(self):
+        self.hide_window()
+        
+        # Determine Area
+        mode = self.get_capture_mode()
+        rect = None
+        
+        if mode == CAPTURE_MODE_AREA:
+             # Delay slightly to allow hide?
+             GLib.usleep(200000) # 0.2s
+             rect = utils.select_area_interactive()
+             if not rect:
+                 self.show_window()
+                 return
+             x, y, w, h = rect.x, rect.y, rect.width, rect.height
+        elif mode == CAPTURE_MODE_WINDOW:
+             # Window selection for video is tricky (window moves).
+             # Usually we grab window geometry once and fixed area.
+             # Reusing x11 capture logic for finding window?
+             # For now, let's treat Window same as Area (interactive selection) or use utils helper?
+             # utils.capture_via_x11 gets window geometry.
+             # We can't easily select window interactively without taking a screenshot first?
+             # utils.find_current_window() works based on active window *after* delay.
+             
+             # Fallback to Area selection for Window mode in Video (common pattern)
+             # Or auto-detect active window after delay?
+             
+             # Let's prompt for area for now to be safe/clear.
+             GLib.usleep(200000)
+             rect = utils.select_area_interactive()
+             if not rect:
+                 self.show_window()
+                 return
+             x, y, w, h = rect.x, rect.y, rect.width, rect.height
+        else:
+             # Full Screen
+             screen = Gdk.Screen.get_default()
+             x, y = 0, 0
+             w = screen.get_width()
+             h = screen.get_height()
+        
+        # Output File
+        save_dir = self.settings.get_string("save-directory")
+        if not save_dir:
+            save_dir = GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_PICTURES)
+            if not save_dir: save_dir = os.path.expanduser("~")
+            
+        fmt = self.combo_format.get_active_id() # Use combo value (video formats)
+        if not fmt: fmt = "webm"
+        
+        pattern = self.settings.get_string("filename-pattern")
+        try:
+             filename = datetime.datetime.now().strftime(pattern)
+        except:
+             filename = "Screencast"
+             
+        if not filename.lower().endswith("." + fmt):
+            filename += "." + fmt
+            
+        output_path = os.path.join(save_dir, filename)
+        
+        if self.recorder.start(x, y, w, h, output_path, fmt):
+             self.stop_window = StopWindow(self.stop_recording)
+             # Position stop window bottom right
+             stop_w, stop_h = 150, 60
+             screen_w = Gdk.Screen.get_default().get_width()
+             screen_h = Gdk.Screen.get_default().get_height()
+             self.stop_window.move(screen_w - stop_w - 20, screen_h - stop_h - 50)
+        else:
+             self.show_window()
+             self.show_error_dialog(_("Failed to start recording"))
+
+    def stop_recording(self):
+        saved_path = self.recorder.stop()
+        self.stop_window = None
+        self.show_window()
+        
+        if saved_path:
+             notification = Gio.Notification.new(_("SCREENCAST SAVED"))
+             notification.set_body(saved_path)
+             notification.set_icon(Gio.ThemedIcon.new("video-x-generic"))
+             if self.application:
+                 self.application.send_notification("clicky-video", notification)
 
     def save_canvas(self, widget):
         if not self.canvas: return
