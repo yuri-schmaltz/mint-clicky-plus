@@ -1,3 +1,14 @@
+clicky-plus (1.1.3) una; urgency=low
+
+  * Hardening: Fixed wipe-on-resize drawing persistence bug.
+  * Hardening: Fixed GtkFileChooserButton GSettings binding crash.
+  * Hardening: Improved Blur tool compatibility for non-Image surfaces.
+  * Hardening: Fixed CLI mode argument parsing variables.
+  * Packaging: Added missing python3-pil and ffmpeg dependencies.
+  * Cleanup: Removed redundant scripts and build artifacts.
+
+ -- Antigravity AI <antigravity@google.com>  Fri, 13 Feb 2026 01:45:00 -0300
+
 clicky-plus (1.1.2) una; urgency=low
 
   * Update desktop category to Accessories (Utility).
