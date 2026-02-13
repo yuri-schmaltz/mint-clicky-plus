@@ -208,8 +208,6 @@ class MainWindow():
         self.window.connect("key-press-event",self.on_key_press_event)
         self.window.connect("size-allocate", self.on_window_size_allocate)
         self.builder.get_object("go_back_button").connect("clicked", self.go_back)
-        self.window.connect("size-allocate", self.on_window_size_allocate)
-        self.builder.get_object("go_back_button").connect("clicked", self.go_back)
         
         self.btn_capture = self.builder.get_object("button_take_screenshot")
         self.btn_capture.connect("clicked", self.on_capture_click)
@@ -310,12 +308,13 @@ class MainWindow():
 
     def set_mode_and_capture(self, mode):
         # Map string mode to radio button or constant
+        # Map string mode to radio button or constant
         if mode == "screen":
-            self.radio_mode_screen.set_active(True)
+            self.toggle_mode_screen.set_active(True)
         elif mode == "window":
-            self.radio_mode_window.set_active(True)
+            self.toggle_mode_window.set_active(True)
         elif mode == "area":
-            self.radio_mode_area.set_active(True)
+            self.toggle_mode_area.set_active(True)
             
         # Start capture immediately
         self.start_screenshot(None)
@@ -324,6 +323,9 @@ class MainWindow():
         self.canvas.current_tool = mode
 
     def setup_canvas_ui(self):
+        if hasattr(self, 'canvas_toolbar'):
+            return
+
         # Get the container box
         box = self.builder.get_object("screenshot_box")
         
@@ -399,6 +401,7 @@ class MainWindow():
 
         vbox_toolbar.pack_start(prop_row, False, False, 0)
         vbox_toolbar.show_all()
+        self.canvas_toolbar = vbox_toolbar
         
         box.pack_start(vbox_toolbar, False, False, 0)
         box.reorder_child(vbox_toolbar, 0)

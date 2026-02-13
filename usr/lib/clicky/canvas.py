@@ -109,13 +109,19 @@ class CanvasWidget(Gtk.DrawingArea):
         self.queue_draw()
 
     def on_size_allocate(self, widget, allocation):
-        # When resized, we might arguably want to keep the surface or resize it.
-        # For simplicity in a screenshot tool, the canvas size usually matches image size
-        # or we accept the allocation.
-        # Let's create a surface that matches the allocation if it doesn't exist
-        if self.surface is None or self.surface.get_width() != allocation.width or self.surface.get_height() != allocation.height:
+        if self.surface is None:
              self.create_surface(allocation.width, allocation.height)
              self.redraw_canvas()
+        elif self.surface.get_width() < allocation.width or self.surface.get_height() < allocation.height:
+             # Expand surface without wiping
+             old_surface = self.surface
+             width = max(allocation.width, old_surface.get_width())
+             height = max(allocation.height, old_surface.get_height())
+             
+             self.create_surface(width, height)
+             cr = cairo.Context(self.surface)
+             cr.set_source_surface(old_surface, 0, 0)
+             cr.paint()
 
     def create_surface(self, width, height):
         window = self.get_window()
@@ -380,7 +386,15 @@ class CanvasWidget(Gtk.DrawingArea):
         
         if w < 5 or h < 5: return
         
-        # Flush surface
+        if not isinstance(self.surface, cairo.ImageSurface):
+            # Fallback for non-image surfaces (e.g. X11)
+            temp_surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
+            cr = cairo.Context(temp_surface)
+            cr.set_source_surface(self.surface, 0, 0)
+            cr.paint()
+            self.surface = temp_surface
+
+        # Flush surface to ensure it's up to date
         self.surface.flush()
         
         data = self.surface.get_data()
