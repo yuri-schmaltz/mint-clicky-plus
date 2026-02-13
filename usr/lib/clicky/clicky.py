@@ -17,7 +17,7 @@ warnings.filterwarnings("ignore")
 
 gi.require_version("Gtk", "3.0")
 gi.require_version('XApp', '1.0')
-from gi.repository import Gtk, Gdk, Gio, XApp, GLib
+from gi.repository import Gtk, Gdk, Gio, XApp, GLib, GdkPixbuf
 
 import utils
 from common import *
