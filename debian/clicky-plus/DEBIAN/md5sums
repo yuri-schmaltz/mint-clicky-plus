@@ -4,11 +4,11 @@ ccac242b7fda8bef1eb32db16e1e14c2  usr/lib/clicky/clicky.py
 72165168ec6b22a141590ba713ccea1e  usr/lib/clicky/common.py
 eac67bc7d385f94ee1e635926c7d148c  usr/lib/clicky/flash.py
 d8442f60b494010ed3547b9e666092ae  usr/lib/clicky/utils.py
-4fca4c0be8deeeb159a68cbe0a98c73c  usr/share/applications/clicky.desktop
+e25b67f5223cd91155b3891137fc5da3  usr/share/applications/clicky.desktop
 3577ee9c6216535e58789f753caa1890  usr/share/clicky/clicky.css
 e2d1524a24a8212f1b34ed2a489a7b08  usr/share/clicky/clicky.ui
 98746428d0fabc0100f0182a6213b5f5  usr/share/clicky/shortcuts.ui
-b4b671f2217203a84cf014119384852e  usr/share/doc/clicky-plus/changelog.gz
+12175cfbf07541d92266cd9eea9ded48  usr/share/doc/clicky-plus/changelog.gz
 0dc20369bb04486765bf7cb1bd1b91b7  usr/share/doc/clicky-plus/copyright
 002bcd120a08ffcda388bfd46d6929a7  usr/share/glib-2.0/schemas/gschemas.compiled
 e504a4ae7d6ae6f6cf96ce54324ccc00  usr/share/glib-2.0/schemas/org.x.clickyplus.gschema.xml
